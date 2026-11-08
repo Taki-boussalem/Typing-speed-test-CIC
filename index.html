@@ -1,0 +1,1012 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Wolf &amp; Sheep - Typing Duel</title>
+  <style>
+    :root {
+      --bg: #11111b;
+      --panel: #181825;
+      --line: #313244;
+      --text: #cdd6f4;
+      --dim: #6c7086;
+      --dim2: #585b70;
+      --ok: #a6e3a1;
+      --bad: #f38ba8;
+      --accent: #89b4fa;
+      --gold: #f9e2af;
+      --wolf: #f38ba8;
+      --sheep: #a6e3a1;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      height: 100%;
+      margin: 0;
+    }
+
+    body {
+      background: radial-gradient(1200px 600px at 20% -10%, #1e1e2e, transparent), var(--bg);
+      color: var(--text);
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      overflow: hidden;
+    }
+
+    #app {
+      height: 100dvh;
+      max-width: 1600px;
+      margin: 0 auto;
+      padding: 12px 20px;
+      display: grid;
+      grid-template-rows: auto auto auto minmax(0, 1fr) auto;
+      gap: 12px;
+    }
+
+    /* ---------- header ---------- */
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .logo {
+      font-size: 2rem;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 1.35rem;
+      line-height: 1;
+    }
+
+    .brand small {
+      color: var(--dim);
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      font-size: .7rem;
+    }
+
+    .stats {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .stat {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 6px 16px;
+      min-width: 96px;
+      text-align: center;
+    }
+
+    .stat b {
+      display: block;
+      font-size: 1.35rem;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .stat span {
+      color: var(--dim);
+      font-size: .66rem;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+    }
+
+    .btn {
+      background: var(--accent);
+      color: #11111b;
+      border: 0;
+      border-radius: 12px;
+      padding: 11px 20px;
+      font-weight: 700;
+      font-size: .95rem;
+      cursor: pointer;
+      transition: transform .1s, filter .15s;
+    }
+
+    .btn:hover:not(:disabled) {
+      filter: brightness(1.1);
+      transform: translateY(-1px);
+    }
+
+    .btn:disabled {
+      opacity: .35;
+      cursor: not-allowed;
+    }
+
+    /* ---------- arena ---------- */
+    #arena {
+      position: relative;
+      height: clamp(180px, 29vh, 300px);
+      border-radius: 18px;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      display: grid;
+      grid-template-rows: 1fr 1fr;
+    }
+
+    .lane {
+      position: relative;
+    }
+
+    .lane.wolf {
+      background: linear-gradient(180deg, #1f2a33, #1b252c);
+      border-bottom: 2px dashed rgba(255, 255, 255, .07);
+    }
+
+    .lane.sheep {
+      background: linear-gradient(180deg, #27402b, #20361f);
+    }
+
+    .lane::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 10px;
+      height: 3px;
+      opacity: .8;
+      background: repeating-linear-gradient(90deg, rgba(255, 255, 255, .08) 0 26px, transparent 26px 52px);
+    }
+
+    .tag {
+      position: absolute;
+      top: 8px;
+      left: 12px;
+      z-index: 4;
+      font-size: .72rem;
+      font-weight: 800;
+      letter-spacing: .07em;
+      padding: 4px 12px;
+      border-radius: 999px;
+      background: rgba(0, 0, 0, .4);
+      color: #fff;
+    }
+
+    .tag.me {
+      outline: 2px solid var(--accent);
+    }
+
+    .run {
+      position: absolute;
+      left: 14px;
+      right: 120px;
+      top: 0;
+      bottom: 0;
+    }
+
+    .goal {
+      position: absolute;
+      right: 22px;
+      bottom: 6px;
+      font-size: clamp(34px, 5.4vh, 58px);
+      line-height: 1;
+      z-index: 1;
+    }
+
+    .goal.party {
+      animation: hop .45s ease infinite;
+    }
+
+    .animal {
+      position: absolute;
+      bottom: 8px;
+      width: 64px;
+      text-align: center;
+      z-index: 2;
+      left: calc(var(--p, 0) * (100% - 64px));
+      transition: left .25s linear;
+    }
+
+    .emoji {
+      display: inline-block;
+      font-size: clamp(36px, 5.6vh, 60px);
+      line-height: 1;
+      transform: scaleX(-1);
+      filter: drop-shadow(0 4px 4px rgba(0, 0, 0, .35));
+    }
+
+    .animal.hop {
+      animation: hop .3s ease;
+    }
+
+    .animal.cheer {
+      animation: hop .35s ease infinite;
+    }
+
+    .animal.home {
+      left: calc(100% + 260px);
+      transition: left 1.8s ease-in;
+    }
+
+    .animal.eaten {
+      transform: scale(0) rotate(240deg);
+      opacity: 0;
+      transition: transform .5s ease-in, opacity .5s;
+    }
+
+    .animal.sad {
+      transform: translateY(5px) rotate(-8deg);
+      transition: transform .5s;
+    }
+
+    .animal.sad .emoji {
+      filter: grayscale(.7) drop-shadow(0 4px 4px rgba(0, 0, 0, .35));
+    }
+
+    .bubble {
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      margin-bottom: 2px;
+      background: #fff;
+      color: #11111b;
+      font-weight: 800;
+      font-size: .8rem;
+      padding: 3px 10px;
+      border-radius: 12px;
+      white-space: nowrap;
+      opacity: 0;
+      transition: opacity .2s;
+      pointer-events: none;
+    }
+
+    .bubble.show {
+      opacity: 1;
+    }
+
+    .fx {
+      position: absolute;
+      font-size: 2rem;
+      pointer-events: none;
+      z-index: 6;
+      opacity: 0;
+    }
+
+    .fx.float {
+      animation: floatUp 1.8s ease-out forwards;
+    }
+
+    #arena.shake {
+      animation: shake .35s 2;
+    }
+
+    @keyframes hop {
+      50% {
+        transform: translateY(-14px);
+      }
+    }
+
+    @keyframes floatUp {
+      0% {
+        opacity: 0;
+        transform: translate(0, 12px) scale(.6);
+      }
+
+      15% {
+        opacity: 1;
+      }
+
+      100% {
+        opacity: 0;
+        transform: translate(var(--dx, 0), -120px) scale(1.3) rotate(var(--rot, 0deg));
+      }
+    }
+
+    @keyframes shake {
+      25% {
+        transform: translateX(-6px);
+      }
+
+      75% {
+        transform: translateX(6px);
+      }
+    }
+
+    /* ---------- level pills ---------- */
+    #levels {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      min-height: 34px;
+    }
+
+    .pill {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 14px;
+      border-radius: 999px;
+      font-size: .78rem;
+      font-weight: 600;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      color: var(--dim);
+      transition: all .2s;
+    }
+
+    .pill i {
+      font-style: normal;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: var(--line);
+      color: var(--text);
+      display: grid;
+      place-items: center;
+      font-size: .7rem;
+    }
+
+    .pill.current {
+      color: var(--text);
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(137, 180, 250, .15);
+    }
+
+    .pill.current i {
+      background: var(--accent);
+      color: #11111b;
+    }
+
+    .pill.done {
+      color: var(--ok);
+      border-color: rgba(166, 227, 161, .35);
+    }
+
+    .pill.done i {
+      background: var(--ok);
+      color: #11111b;
+    }
+
+    /* ---------- typing area ---------- */
+    #typing {
+      position: relative;
+      overflow: auto;
+      cursor: text;
+      border-radius: 18px;
+      border: 1px solid var(--line);
+      background: linear-gradient(180deg, rgba(30, 30, 46, .75), rgba(24, 24, 37, .9));
+      padding: clamp(20px, 3.2vw, 48px);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    #stageProg {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 5px;
+      background: var(--line);
+    }
+
+    #stageProg i {
+      display: block;
+      height: 100%;
+      width: 0;
+      background: linear-gradient(90deg, var(--accent), var(--ok));
+      transition: width .12s;
+    }
+
+    #stageTitle {
+      color: var(--accent);
+      font-weight: 800;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      font-size: .8rem;
+      margin-bottom: 18px;
+      min-height: 1em;
+    }
+
+    #text {
+      font-family: "JetBrains Mono", "Fira Code", ui-monospace, Menlo, Consolas, monospace;
+      font-size: clamp(1.3rem, 2.55vw, 2.5rem);
+      line-height: 1.85;
+      user-select: none;
+    }
+
+    .w {
+      display: inline-block;
+      white-space: pre;
+    }
+
+    .c {
+      color: var(--dim2);
+      border-radius: 5px;
+      transition: color .08s;
+    }
+
+    .c.ok {
+      color: var(--ok);
+    }
+
+    .c.bad {
+      color: #fff;
+      background: rgba(243, 139, 168, .6);
+    }
+
+    .c.cur {
+      color: var(--text);
+      background: rgba(137, 180, 250, .2);
+      box-shadow: inset 0 -3px 0 var(--accent);
+      animation: blink 1s steps(2) infinite;
+    }
+
+    @keyframes blink {
+      50% {
+        box-shadow: inset 0 -3px 0 transparent;
+      }
+    }
+
+    #input {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 1px;
+      height: 1px;
+      opacity: 0;
+      border: 0;
+      padding: 0;
+    }
+
+    #focusHint {
+      position: absolute;
+      bottom: 14px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(249, 226, 175, .12);
+      color: var(--gold);
+      border: 1px solid rgba(249, 226, 175, .3);
+      border-radius: 999px;
+      padding: 6px 16px;
+      font-size: .8rem;
+      opacity: 0;
+      transition: opacity .2s;
+      pointer-events: none;
+    }
+
+    #typing.unfocused #focusHint {
+      opacity: 1;
+    }
+
+    #toast {
+      position: absolute;
+      top: 18px;
+      left: 50%;
+      transform: translate(-50%, -10px);
+      background: var(--accent);
+      color: #11111b;
+      font-weight: 800;
+      padding: 8px 20px;
+      border-radius: 999px;
+      opacity: 0;
+      transition: all .25s;
+      pointer-events: none;
+      z-index: 20;
+    }
+
+    #toast.show {
+      opacity: 1;
+      transform: translate(-50%, 0);
+    }
+
+    /* ---------- overlay ---------- */
+    #overlay {
+      position: absolute;
+      inset: 0;
+      z-index: 10;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      gap: 14px;
+      padding: 24px;
+      background: rgba(17, 17, 27, .84);
+      backdrop-filter: blur(6px);
+      transition: opacity .25s;
+    }
+
+    #overlay.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    #ovBig {
+      font-size: clamp(2rem, 5.5vw, 4.6rem);
+      font-weight: 900;
+    }
+
+    #overlay.wolf #ovBig {
+      color: var(--wolf);
+    }
+
+    #overlay.sheep #ovBig {
+      color: var(--sheep);
+    }
+
+    #ovSub {
+      color: #a6adc8;
+      font-size: clamp(1rem, 1.7vw, 1.4rem);
+      max-width: 760px;
+      line-height: 1.5;
+    }
+
+    #ovCount {
+      font-size: clamp(3rem, 10vw, 7rem);
+      font-weight: 900;
+      color: var(--gold);
+      line-height: 1;
+    }
+
+    footer {
+      color: var(--dim);
+      font-size: .8rem;
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    kbd {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 1px 6px;
+      font-size: .75rem;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="app">
+
+    <header>
+      <div class="brand">
+        <span class="logo">🐺🐑</span>
+        <div>
+          <h1>Wolf &amp; Sheep</h1><small>Typing Duel</small>
+        </div>
+      </div>
+      <div class="stats">
+        <div class="stat"><b id="wpm">0</b><span>WPM</span></div>
+        <div class="stat"><b id="acc">100%</b><span>Accuracy</span></div>
+        <div class="stat"><b id="time">0:00</b><span>Time</span></div>
+        <div class="stat"><b id="score">0 – 0</b><span>You – Opponent</span></div>
+      </div>
+      <button id="resetBtn" class="btn" disabled title="Restarts the round for both players (roles swap)">↻ Reset
+        round</button>
+    </header>
+
+    <section id="arena">
+      <div class="lane wolf">
+        <span class="tag" id="tagWolf"></span>
+        <div class="run">
+          <div class="animal" id="wolf">
+            <div class="bubble"></div>
+            <div class="emoji">🐺</div>
+          </div>
+        </div>
+        <div class="goal">🌲</div>
+      </div>
+      <div class="lane sheep">
+        <span class="tag" id="tagSheep"></span>
+        <div class="run">
+          <div class="animal" id="sheep">
+            <div class="bubble"></div>
+            <div class="emoji">🐑</div>
+          </div>
+        </div>
+        <div class="goal" id="goalSheep">🏡</div>
+      </div>
+    </section>
+
+    <nav id="levels"></nav>
+
+    <main id="typing">
+      <div id="stageProg"><i></i></div>
+      <div id="stageTitle"></div>
+      <div id="text"></div>
+      <input id="input" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
+        aria-label="typing input" readonly>
+      <div id="focusHint">Click here or press any key to keep typing</div>
+      <div id="toast"></div>
+      <div id="overlay" class="hidden">
+        <div id="ovBig"></div>
+        <div id="ovSub"></div>
+        <div id="ovCount"></div>
+        <button id="ovBtn" class="btn" style="display:none"></button>
+      </div>
+    </main>
+
+    <footer>
+      <span>Type the text exactly. Wrong letters turn red - fix them with <kbd>Backspace</kbd> to move on. Pasting is
+        disabled.</span>
+      <span>Either player can reset the round - it restarts for both.</span>
+    </footer>
+  </div>
+
+  <script>
+    'use strict';
+    const $ = (id) => document.getElementById(id);
+    const input = $('input');
+    const typingEl = $('typing');
+    const ICON = {wolf: '🐺', sheep: '🐑'};
+    const A = {wolf: $('wolf'), sheep: $('sheep')};
+    const TAG = {wolf: $('tagWolf'), sheep: $('tagSheep')};
+
+    const state = {
+      phase: 'connecting', // connecting | waiting | countdown | playing | finishing | over | closed
+      role: null, texts: [], names: [], stage: 0, oppStage: 0, typed: '', chars: [],
+      totalChars: 0, doneChars: 0, keys: 0, errors: 0, startTime: 0, endTime: 0,
+      wins: {you: 0, opp: 0}, round: 0,
+    };
+
+    let timers = [], cdTimer = null, overlayAction = null, toastTimer = null;
+    const lastHop = {wolf: 0, sheep: 0};
+    const later = (fn, ms) => {const t = setTimeout(fn, ms); timers.push(t); return t;};
+    const clearTimers = () => {timers.forEach(clearTimeout); timers = []; clearInterval(cdTimer);};
+
+    /* ================= networking ================= */
+    const ws = new WebSocket((location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host);
+    const send = (m) => {if (ws.readyState === 1) ws.send(JSON.stringify(m));};
+    ws.onmessage = (e) => handle(JSON.parse(e.data));
+    ws.onclose = () => {
+      state.phase = 'closed'; clearTimers(); input.readOnly = true; $('resetBtn').disabled = true;
+      showOverlay({big: '🔌 Disconnected', sub: 'The connection to the server was lost.', btn: 'Reload', action: () => location.reload()});
+    };
+
+    function handle(m) {
+      switch (m.type) {
+        case 'waiting': return onWaiting();
+        case 'matched': return onMatched(m);
+        case 'go': return onGo();
+        case 'opponent': return onOpponent(m);
+        case 'end': return onEnd(m);
+        case 'left': return toast('Your opponent left the game');
+      }
+    }
+
+    /* ================= overlay / toast ================= */
+    function showOverlay({big, sub = '', count = '', btn = '', action = null, theme = ''}) {
+      $('ovBig').textContent = big;
+      $('ovSub').textContent = sub;
+      $('ovCount').textContent = count;
+      const b = $('ovBtn');
+      b.style.display = btn ? '' : 'none';
+      b.textContent = btn;
+      overlayAction = action;
+      $('overlay').className = theme;
+    }
+    function hideOverlay() {$('overlay').className = 'hidden'; overlayAction = null;}
+    $('ovBtn').onclick = () => overlayAction && overlayAction();
+
+    function toast(msg) {
+      const t = $('toast');
+      t.textContent = msg; t.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => t.classList.remove('show'), 2000);
+    }
+
+    /* ================= state transitions ================= */
+    function resetLocal() {
+      clearTimers();
+      Object.assign(state, {
+        stage: 0, oppStage: 0, typed: '', chars: [], doneChars: 0, keys: 0, errors: 0, startTime: 0, endTime: 0,
+      });
+      input.value = ''; input.readOnly = true;
+      resetArena();
+    }
+
+    function onWaiting() {
+      resetLocal();
+      Object.assign(state, {phase: 'waiting', role: null, texts: [], names: [], totalChars: 0, wins: {you: 0, opp: 0}});
+      $('text').innerHTML = ''; $('stageTitle').textContent = ''; $('stageProg').firstElementChild.style.width = '0';
+      $('resetBtn').disabled = true;
+      buildLevels(); refreshTags(); refreshStats();
+      showOverlay({
+        big: '⏳ Waiting for an opponent...',
+        sub: 'Open this page in a second tab, or send the link to a friend on your network.',
+      });
+    }
+
+    function onMatched(m) {
+      resetLocal();
+      Object.assign(state, {
+        phase: 'countdown', role: m.role, texts: m.texts, names: m.names, wins: m.wins, round: m.round,
+        totalChars: m.texts.reduce((a, t) => a + t.length, 0),
+      });
+      $('resetBtn').disabled = false;
+      buildLevels(); buildStage(); refreshTags(); refreshStats();
+
+      const wolf = m.role === 'wolf', n = m.texts.length;
+      let sub = wolf
+        ? `Finish all ${n} levels before the sheep gets away - then eat it!`
+        : `Finish all ${n} levels first and run to safety before the wolf catches you!`;
+      if (m.round > 1) sub += ' (Roles swapped!)';
+      showOverlay({big: wolf ? '🐺 You are the WOLF' : '🐑 You are the SHEEP', sub, count: '3', theme: m.role});
+      let c = 3;
+      cdTimer = setInterval(() => {c--; if (c > 0) $('ovCount').textContent = c; else clearInterval(cdTimer);}, 1000);
+      if (m.by === 'opponent') toast('Your opponent reset the round');
+    }
+
+    function onGo() {
+      if (state.phase !== 'countdown') return;
+      clearInterval(cdTimer);
+      state.phase = 'playing';
+      state.startTime = Date.now();
+      hideOverlay();
+      input.readOnly = false; input.focus();
+      toast('GO! GO! GO!');
+    }
+
+    function onOpponent(m) {
+      state.oppStage = m.stage;
+      setProgress(state.role === 'wolf' ? 'sheep' : 'wolf', m.progress);
+      refreshTags();
+    }
+
+    function onEnd(m) {
+      state.phase = 'over';
+      state.endTime = Date.now();
+      state.wins = m.wins;
+      input.readOnly = true; input.blur();
+      refreshStats();
+      playEnd(m.winnerRole);
+      later(() => showResult(m), 2700);
+    }
+
+    function showResult(m) {
+      const {wpm, acc, secs} = refreshStats();
+      const role = state.role;
+      let big, sub;
+      if (role === 'wolf' && m.won) {big = '😋 Nom nom nom!'; sub = 'You caught the sheep. Delicious!';}
+      else if (role === 'wolf') {big = '😤 The sheep escaped!'; sub = 'It ran home happy. Better luck next time, wolf.';}
+      else if (m.won) {big = '🎉 You escaped!'; sub = 'The wolf goes hungry tonight. Baaa!';}
+      else {big = '🦴 You got eaten...'; sub = 'The wolf was faster this time.';}
+      sub += `  -  ${wpm} WPM, ${acc}% accuracy, ${fmt(secs)}`;
+      showOverlay({big, sub, btn: '↻ Play again (swap roles)', action: () => send({type: 'reset'}), theme: m.won ? 'sheep' : 'wolf'});
+    }
+
+    /* ================= typing ================= */
+    function correctPrefix() {
+      const t = state.texts[state.stage] || '';
+      let n = 0;
+      while (n < state.typed.length && state.typed[n] === t[n]) n++;
+      return n;
+    }
+
+    function paint() {
+      const t = state.texts[state.stage] || '', v = state.typed, ch = state.chars;
+      for (let i = 0; i < ch.length; i++) {
+        let cls = 'c';
+        if (i < v.length) cls += v[i] === t[i] ? ' ok' : ' bad';
+        else if (i === v.length) cls += ' cur';
+        ch[i].className = cls;
+      }
+      $('stageProg').firstElementChild.style.width = (t.length ? (correctPrefix() / t.length) * 100 : 0) + '%';
+    }
+
+    function buildStage() {
+      const t = state.texts[state.stage];
+      const box = $('text');
+      box.innerHTML = ''; state.chars = [];
+      input.value = ''; state.typed = '';
+      if (!t) return;
+      (t.match(/\S+\s*/g) || []).forEach((word) => {
+        const w = document.createElement('span');
+        w.className = 'w';
+        for (const ch of word) {
+          const c = document.createElement('span');
+          c.className = 'c'; c.textContent = ch;
+          w.appendChild(c); state.chars.push(c);
+        }
+        box.appendChild(w);
+      });
+      input.maxLength = t.length;
+      $('stageTitle').textContent = `Level ${state.stage + 1} of ${state.texts.length}  ·  ${state.names[state.stage]}`;
+      paint();
+    }
+
+    function buildLevels() {
+      const nav = $('levels');
+      nav.innerHTML = '';
+      state.names.forEach((name, i) => {
+        const p = document.createElement('div');
+        p.className = 'pill';
+        p.innerHTML = `<i>${i + 1}</i>${name}`;
+        nav.appendChild(p);
+      });
+      updateLevels();
+    }
+    function updateLevels() {
+      [...$('levels').children].forEach((p, i) => {
+        p.classList.toggle('done', i < state.stage);
+        p.classList.toggle('current', i === state.stage);
+      });
+    }
+
+    function setMyProgress() {
+      const p = state.totalChars ? (state.doneChars + correctPrefix()) / state.totalChars : 0;
+      setProgress(state.role, p);
+      send({type: 'progress', progress: p});
+    }
+
+    input.addEventListener('input', () => {
+      if (state.phase !== 'playing') {input.value = state.typed; return;}
+      const v = input.value, t = state.texts[state.stage];
+      for (let i = state.typed.length; i < v.length; i++) {state.keys++; if (v[i] !== t[i]) state.errors++;}
+      state.typed = v;
+      paint(); setMyProgress();
+      if (v === t) completeStage();
+    });
+
+    function completeStage() {
+      const t = state.texts[state.stage];
+      send({type: 'stageDone', typed: state.typed});
+      state.doneChars += t.length;
+      state.stage++;
+      state.typed = ''; input.value = '';
+      refreshTags(); updateLevels();
+      if (state.stage >= state.texts.length) {
+        state.phase = 'finishing'; input.readOnly = true;
+        setMyProgress();
+        $('stageTitle').textContent = 'All levels complete!';
+        $('stageProg').firstElementChild.style.width = '100%';
+        return;
+      }
+      toast(`✅ Level ${state.stage} complete - next: ${state.names[state.stage]}`);
+      buildStage();
+      setMyProgress();
+    }
+
+    // keep typing focused, block cheating / cursor tricks
+    input.addEventListener('paste', (e) => e.preventDefault());
+    input.addEventListener('drop', (e) => e.preventDefault());
+    input.addEventListener('keydown', (e) => {
+      if (['Tab', 'Enter', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End'].includes(e.key)) e.preventDefault();
+    });
+    input.addEventListener('blur', () => {if (state.phase === 'playing') typingEl.classList.add('unfocused');});
+    input.addEventListener('focus', () => typingEl.classList.remove('unfocused'));
+    typingEl.addEventListener('mousedown', (e) => {
+      if (e.target.closest('button')) return;
+      e.preventDefault();
+      if (!input.readOnly) input.focus();
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && state.phase === 'over' && overlayAction) return overlayAction();
+      if (state.phase === 'playing' && document.activeElement !== input && !e.ctrlKey && !e.metaKey && !e.altKey) input.focus();
+    });
+    $('resetBtn').onclick = () => send({type: 'reset'});
+
+    /* ================= stats ================= */
+    const fmt = (s) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
+    function refreshStats() {
+      const live = state.phase === 'playing' || state.phase === 'finishing';
+      const end = live ? Date.now() : (state.endTime || state.startTime);
+      const secs = state.startTime ? Math.max(0, (end - state.startTime) / 1000) : 0;
+      const good = state.doneChars + correctPrefix();
+      const wpm = secs > 1 ? Math.round(good / 5 / (secs / 60)) : 0;
+      const acc = state.keys ? Math.max(0, Math.round(100 * (1 - state.errors / state.keys))) : 100;
+      $('wpm').textContent = wpm;
+      $('acc').textContent = acc + '%';
+      $('time').textContent = fmt(secs);
+      $('score').textContent = `${state.wins.you} – ${state.wins.opp}`;
+      return {wpm, acc, secs};
+    }
+    setInterval(refreshStats, 200);
+
+    /* ================= arena ================= */
+    function refreshTags() {
+      const n = state.texts.length;
+      for (const r of ['wolf', 'sheep']) {
+        const mine = r === state.role;
+        let label = `${ICON[r]} ${r.toUpperCase()}`;
+        if (state.role) {
+          const lv = mine ? state.stage : state.oppStage;
+          label += ` · ${mine ? 'YOU' : 'OPPONENT'} · ${lv >= n ? 'DONE' : `LV ${lv + 1}/${n}`}`;
+        }
+        TAG[r].textContent = label;
+        TAG[r].classList.toggle('me', mine);
+      }
+    }
+
+    function setProgress(role, p) {
+      const el = A[role];
+      el.style.setProperty('--p', Math.min(1, Math.max(0, p)).toFixed(4));
+      const now = Date.now();
+      if (now - lastHop[role] > 280) {
+        lastHop[role] = now;
+        el.classList.remove('hop'); void el.offsetWidth; el.classList.add('hop');
+      }
+    }
+
+    function resetArena() {
+      for (const r of ['wolf', 'sheep']) {
+        const el = A[r];
+        el.removeAttribute('style');
+        el.className = 'animal';
+        el.style.setProperty('--p', 0);
+        el.querySelector('.bubble').classList.remove('show');
+      }
+      $('arena').classList.remove('shake');
+      $('goalSheep').classList.remove('party');
+      document.querySelectorAll('.fx').forEach((e) => e.remove());
+    }
+
+    function bubble(role, text) {
+      const b = A[role].querySelector('.bubble');
+      b.textContent = text; b.classList.add('show');
+    }
+
+    function fx(emoji, x, y, o = {}) {
+      const s = document.createElement('span');
+      s.className = 'fx float'; s.textContent = emoji;
+      s.style.left = x + 'px'; s.style.top = y + 'px';
+      s.style.setProperty('--dx', (o.dx !== undefined ? o.dx : Math.random() * 160 - 80) + 'px');
+      s.style.setProperty('--rot', (Math.random() * 60 - 30) + 'deg');
+      s.style.animationDelay = (o.delay || 0) + 's';
+      $('arena').appendChild(s);
+    }
+    function posOf(el) {
+      const a = $('arena').getBoundingClientRect(), r = el.getBoundingClientRect();
+      return {x: r.left - a.left + r.width / 2, y: r.top - a.top};
+    }
+
+    function playEnd(winner) {
+      const wolf = A.wolf, sheep = A.sheep;
+      [wolf, sheep].forEach((el) => el.classList.remove('hop'));
+
+      if (winner === 'wolf') {
+        // the wolf pounces on the sheep and eats it
+        const wr = wolf.getBoundingClientRect(), sr = sheep.getBoundingClientRect();
+        wolf.style.transition = 'transform .7s cubic-bezier(.6,0,.3,1)';
+        wolf.style.transform = `translate(${sr.left - wr.left - 18}px, ${sr.top - wr.top}px) scale(1.25)`;
+        wolf.style.zIndex = 5;
+        later(() => {
+          bubble('wolf', 'CHOMP! 😋');
+          sheep.classList.add('eaten');
+          const p = posOf(sheep);
+          fx('🦴', p.x, p.y, {dx: -40}); fx('🦴', p.x + 12, p.y, {dx: 45, delay: .1}); fx('💨', p.x, p.y, {dx: 0, delay: .05});
+          $('arena').classList.add('shake');
+        }, 720);
+      } else {
+        // the sheep reaches the barn, then runs off happy
+        sheep.style.setProperty('--p', 1);
+        bubble('wolf', 'Grrr... 😤'); wolf.classList.add('sad');
+        later(() => {
+          bubble('sheep', 'Baaa! 🎉');
+          sheep.classList.add('home', 'cheer');
+          $('goalSheep').classList.add('party');
+          const w = $('arena').clientWidth, h = $('arena').clientHeight;
+          const bits = ['🎉', '✨', '💚', '🌟', '❤️'];
+          for (let i = 0; i < 26; i++) fx(bits[i % bits.length], Math.random() * w, h - 40, {delay: Math.random() * .8});
+        }, 450);
+      }
+    }
+
+    /* initial UI */
+    buildLevels(); refreshTags(); refreshStats();
+    showOverlay({big: 'Connecting...', sub: ''});
+  </script>
+</body>
+
+</html>
