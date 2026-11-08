@@ -4,8 +4,8 @@ const path = require('path');
 const { WebSocketServer } = require('ws');
 
 /* ------------------------------------------------------------------ *
- *  LEVELS: progressive difficulty. Each level has a few candidate
- *  texts; one is picked at random per round (same for both players).
+ *  LEVELS: progressive difficulty. Each level has candidate texts;
+ *  one is picked at random per round (same for both players).
  *  Edit freely - add levels, change texts, adapt to your keyboard.
  * ------------------------------------------------------------------ */
 const LEVELS = [
@@ -42,11 +42,19 @@ const LEVELS = [
     ],
   },
   {
-    name: 'Code & Symbols', // brackets, operators, shell, math
+    name: 'Shell & Commands', // terminal commands, pipes, flags
+    texts: [
+      `$ ssh -p 2222 wolf@10.0.0.7 && grep -rn 'sheep' ./farm/*.log | sort -u > out.txt # mask: 0xDEADBEEF & 0xFF`,
+      `$ git checkout -b escape-route && git commit -am "sheep escaped fence #42" && git push -u origin safe-haven`,
+      `$ curl -sSL https://farm.local/api/v1/flock | jq '.sheep[] | select(.speed > 40)' > ./fastest_sheep.json`,
+    ],
+  },
+  {
+    name: 'Code & Logic', // programming syntax, expressions, functions
     texts: [
       `if (wolf.speed > sheep.speed && !fence[x]) { eat(sheep); } // n = p*q, phi = (p-1)*(q-1), e*d = 1 (mod phi)`,
-      `$ ssh -p 2222 wolf@10.0.0.7 && grep -rn 'sheep' ./farm/*.log | sort -u > out.txt # mask: 0xDEADBEEF & 0xFF`,
       `def run(s): return [x**2 % 17 for x in range(1, 10) if x != 3] # {'key': 'a1b2-c3d4', 'mod': 2^16 + 1}`,
+      `const sprint = (dist, stamina) => (stamina > 20 && dist < 500) ? "escape_success" : "wolf_closing_in";`,
     ],
   },
   {
@@ -54,15 +62,44 @@ const LEVELS = [
     texts: [
       `In the end, the wolf and the sheep both knew the truth: speed matters, but precision matters more. One typo = one delay; zero typos = victory! Keep your fingers steady, breathe, and type [every] {single} <symbol> correctly.`,
       `RSA works because multiplying two primes is easy, but factoring their product (e.g., 3233 = 61 * 53) is hard: encrypt with c = m^e mod n, decrypt with m = c^d mod n. Never reuse nonces, and never roll your own crypto!`,
+      `while (wolf.distance > 0) { sheep.run(); if (sheep.reachedBarn()) { celebrate(); break; } else { sheep.dodge(); } } // victory!`,
     ],
   },
 ];
 
-const LEVEL_NAMES = LEVELS.map((l) => l.name);
-const pickTexts = () => LEVELS.map((l) => l.texts[Math.floor(Math.random() * l.texts.length)]);
+/* ------------------------------------------------------------------ *
+ *  INTENSITY MODES:
+ *  - 3 stages: Quick sprint (Warm-up, Sentences, Boss Level)
+ *  - 7 stages: Original full duel (All 7 levels)
+ * ------------------------------------------------------------------ */
+const MODES = {
+  3: {
+    name: 'Quick',
+    stages: 3,
+    indices: [0, 1, 6], // Warm-up, Sentences, Boss Level
+  },
+  7: {
+    name: 'Original',
+    stages: 7,
+    indices: [0, 1, 2, 3, 4, 5, 6], // All 7 levels
+  },
+};
+
+function getLevelsForMode(mode) {
+  const m = Number(mode) === 3 ? 3 : 7;
+  return MODES[m].indices.map((i) => LEVELS[i]);
+}
+
+function pickRound(mode) {
+  const levels = getLevelsForMode(mode);
+  return {
+    names: levels.map((l) => l.name),
+    texts: levels.map((l) => l.texts[Math.floor(Math.random() * l.texts.length)]),
+  };
+}
 
 /* ------------------------------------------------------------------ *
- *  HTTP: just serve the page
+ *  HTTP: serve the single-page application
  * ------------------------------------------------------------------ */
 const server = http.createServer((req, res) => {
   fs.readFile(path.join(__dirname, 'index.html'), (err, data) => {
@@ -76,7 +113,7 @@ const server = http.createServer((req, res) => {
 });
 
 /* ------------------------------------------------------------------ *
- *  WebSocket game logic
+ *  WebSocket game logic & Matchmaking
  * ------------------------------------------------------------------ */
 const wss = new WebSocketServer({ server });
 let waiting = null; // one player waiting for an opponent
@@ -85,18 +122,26 @@ const send = (ws, msg) => {
   if (ws && ws.readyState === 1) ws.send(JSON.stringify(msg));
 };
 
-function enqueue(ws) {
+function enqueue(ws, prefMode) {
   ws.match = null;
   ws.stage = 0;
+  ws.prefMode = prefMode || ws.prefMode || 7;
+
   if (waiting && waiting !== ws && waiting.readyState === 1) {
     const other = waiting;
     waiting = null;
+
+    // If either player explicitly preferred 3 stages, default to 3; otherwise 7
+    const mode = (other.prefMode === 3 || ws.prefMode === 3) ? (other.prefMode === 3 ? 3 : ws.prefMode) : 7;
+
     const match = {
       players: [other, ws],
       roles: Math.random() < 0.5 ? ['wolf', 'sheep'] : ['sheep', 'wolf'],
       wins: [0, 0],
       round: 0,
+      mode: mode,
       texts: [],
+      names: [],
       running: false,
       over: false,
       token: 0, // invalidates old countdown timers after a reset
@@ -105,7 +150,7 @@ function enqueue(ws) {
     startRound(match, null);
   } else {
     waiting = ws;
-    send(ws, { type: 'waiting' });
+    send(ws, { type: 'waiting', prefMode: ws.prefMode });
   }
 }
 
@@ -115,15 +160,19 @@ function startRound(m, resetBy) {
   m.over = false;
   m.round++;
   if (m.round > 1) m.roles.reverse(); // swap roles every new round
-  m.texts = pickTexts();
+
+  const { names, texts } = pickRound(m.mode);
+  m.names = names;
+  m.texts = texts;
 
   m.players.forEach((p, i) => {
     p.stage = 0;
     send(p, {
       type: 'matched',
       role: m.roles[i],
+      mode: m.mode,
       texts: m.texts,
-      names: LEVEL_NAMES,
+      names: m.names,
       round: m.round,
       wins: { you: m.wins[i], opp: m.wins[1 - i] },
       by: resetBy ? (resetBy === p ? 'you' : 'opponent') : null,
@@ -148,6 +197,7 @@ function finish(m, winner) {
       won: p === winner,
       winnerRole: m.roles[wi],
       wins: { you: m.wins[i], opp: m.wins[1 - i] },
+      mode: m.mode,
     });
   });
 }
@@ -159,18 +209,20 @@ function leave(ws) {
   m.token++;
   m.over = true;
   const opp = m.players.find((p) => p !== ws);
+  const prevMode = m.mode;
   ws.match = null;
   if (opp) {
     opp.match = null;
     if (opp.readyState === 1) {
       send(opp, { type: 'left' });
-      enqueue(opp); // put the remaining player back in the queue
+      enqueue(opp, opp.prefMode || prevMode); // return opponent to queue with preference
     }
   }
 }
 
 wss.on('connection', (ws) => {
   ws.isAlive = true;
+  ws.prefMode = 7;
   ws.on('pong', () => (ws.isAlive = true));
   ws.on('error', () => {});
   enqueue(ws);
@@ -182,6 +234,21 @@ wss.on('connection', (ws) => {
     } catch {
       return;
     }
+
+    // Allow setting intensity preference even when queued / waiting
+    if (msg.type === 'setMode') {
+      const mode = Number(msg.mode) === 3 ? 3 : 7;
+      ws.prefMode = mode;
+      if (ws.match) {
+        const m = ws.match;
+        m.mode = mode;
+        startRound(m, ws);
+      } else {
+        send(ws, { type: 'prefModeUpdated', mode });
+      }
+      return;
+    }
+
     const m = ws.match;
     if (!m) return;
     const opp = m.players.find((p) => p !== ws);
@@ -203,6 +270,9 @@ wss.on('connection', (ws) => {
         break;
       }
       case 'reset': {
+        if (msg.mode) {
+          m.mode = Number(msg.mode) === 3 ? 3 : 7;
+        }
         startRound(m, ws); // either player can reset - applies to both
         break;
       }

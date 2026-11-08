@@ -130,6 +130,112 @@
       cursor: not-allowed;
     }
 
+    .btn.alt {
+      background: var(--panel);
+      color: var(--text);
+      border: 1px solid var(--line);
+    }
+
+    .btn.alt:hover:not(:disabled) {
+      border-color: var(--accent);
+      filter: none;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .mode-switch {
+      display: inline-flex;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 3px;
+      gap: 3px;
+    }
+
+    .mode-btn {
+      background: transparent;
+      color: var(--dim);
+      border: 0;
+      border-radius: 9px;
+      padding: 7px 14px;
+      font-size: .82rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all .15s ease;
+      white-space: nowrap;
+    }
+
+    .mode-btn:hover:not(.active) {
+      color: var(--text);
+      background: rgba(255, 255, 255, .05);
+    }
+
+    .mode-btn.active {
+      background: var(--accent);
+      color: #11111b;
+      box-shadow: 0 2px 8px rgba(137, 180, 250, .25);
+    }
+
+    .ov-modes {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      margin-top: 8px;
+    }
+
+    .ov-modes-label {
+      font-size: .85rem;
+      font-weight: 700;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: var(--dim);
+    }
+
+    .ov-modes-btns {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .mode-pill {
+      background: var(--panel);
+      color: var(--text);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 10px 18px;
+      font-weight: 700;
+      font-size: .9rem;
+      cursor: pointer;
+      transition: all .15s;
+    }
+
+    .mode-pill:hover {
+      border-color: var(--accent);
+      transform: translateY(-1px);
+    }
+
+    .mode-pill.active {
+      background: var(--accent);
+      color: #11111b;
+      border-color: var(--accent);
+      box-shadow: 0 4px 12px rgba(137, 180, 250, .3);
+    }
+
+    #ovActions {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-top: 6px;
+    }
+
     /* ---------- arena ---------- */
     #arena {
       position: relative;
@@ -592,8 +698,13 @@
         <div class="stat"><b id="time">0:00</b><span>Time</span></div>
         <div class="stat"><b id="score">0 – 0</b><span>You – Opponent</span></div>
       </div>
-      <button id="resetBtn" class="btn" disabled title="Restarts the round for both players (roles swap)">↻ Reset
-        round</button>
+      <div class="header-actions">
+        <div class="mode-switch" id="modeSwitch" role="group" aria-label="Challenge intensity">
+          <button id="btnMode3" class="mode-btn" type="button" title="Quick Duel (3 Stages)">3 Stages</button>
+          <button id="btnMode7" class="mode-btn active" type="button" title="Original Duel (7 Stages)">7 Stages</button>
+        </div>
+        <button id="resetBtn" class="btn" disabled title="Restarts the round for both players (roles swap)">↻ Reset round</button>
+      </div>
     </header>
 
     <section id="arena">
@@ -633,7 +744,17 @@
         <div id="ovBig"></div>
         <div id="ovSub"></div>
         <div id="ovCount"></div>
-        <button id="ovBtn" class="btn" style="display:none"></button>
+        <div id="ovModes" class="ov-modes" style="display:none">
+          <div class="ov-modes-label">Challenge Intensity</div>
+          <div class="ov-modes-btns">
+            <button id="ovMode3" class="mode-pill" type="button">3 Stages (Quick)</button>
+            <button id="ovMode7" class="mode-pill active" type="button">7 Stages (Original)</button>
+          </div>
+        </div>
+        <div id="ovActions" style="display:none">
+          <button id="ovBtn" class="btn" style="display:none"></button>
+          <button id="ovBtnAlt" class="btn alt" style="display:none"></button>
+        </div>
       </div>
     </main>
 
@@ -653,14 +774,22 @@
     const A = {wolf: $('wolf'), sheep: $('sheep')};
     const TAG = {wolf: $('tagWolf'), sheep: $('tagSheep')};
 
+    function getUrlMode() {
+      const p = new URLSearchParams(window.location.search);
+      const v = p.get('mode') || p.get('stages') || p.get('intensity');
+      if (v === '3' || v === 'quick') return 3;
+      if (v === '7' || v === 'original') return 7;
+      return 7;
+    }
+
     const state = {
       phase: 'connecting', // connecting | waiting | countdown | playing | finishing | over | closed
-      role: null, texts: [], names: [], stage: 0, oppStage: 0, typed: '', chars: [],
+      role: null, mode: getUrlMode(), texts: [], names: [], stage: 0, oppStage: 0, typed: '', chars: [],
       totalChars: 0, doneChars: 0, keys: 0, errors: 0, startTime: 0, endTime: 0,
       wins: {you: 0, opp: 0}, round: 0,
     };
 
-    let timers = [], cdTimer = null, overlayAction = null, toastTimer = null;
+    let timers = [], cdTimer = null, overlayAction = null, overlayActionAlt = null, toastTimer = null;
     const lastHop = {wolf: 0, sheep: 0};
     const later = (fn, ms) => {const t = setTimeout(fn, ms); timers.push(t); return t;};
     const clearTimers = () => {timers.forEach(clearTimeout); timers = []; clearInterval(cdTimer);};
@@ -668,6 +797,9 @@
     /* ================= networking ================= */
     const ws = new WebSocket((location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host);
     const send = (m) => {if (ws.readyState === 1) ws.send(JSON.stringify(m));};
+    ws.onopen = () => {
+      if (state.mode) send({ type: 'setMode', mode: state.mode });
+    };
     ws.onmessage = (e) => handle(JSON.parse(e.data));
     ws.onclose = () => {
       state.phase = 'closed'; clearTimers(); input.readOnly = true; $('resetBtn').disabled = true;
@@ -676,28 +808,68 @@
 
     function handle(m) {
       switch (m.type) {
-        case 'waiting': return onWaiting();
+        case 'waiting': return onWaiting(m);
         case 'matched': return onMatched(m);
         case 'go': return onGo();
         case 'opponent': return onOpponent(m);
         case 'end': return onEnd(m);
+        case 'prefModeUpdated': return onPrefMode(m);
         case 'left': return toast('Your opponent left the game');
       }
     }
 
     /* ================= overlay / toast ================= */
-    function showOverlay({big, sub = '', count = '', btn = '', action = null, theme = ''}) {
+    function showOverlay({big, sub = '', count = '', btn = '', action = null, btnAlt = '', actionAlt = null, showModes = false, theme = ''}) {
       $('ovBig').textContent = big;
       $('ovSub').textContent = sub;
       $('ovCount').textContent = count;
+      $('ovModes').style.display = showModes ? 'flex' : 'none';
+
+      const actions = $('ovActions');
       const b = $('ovBtn');
+      const bAlt = $('ovBtnAlt');
+
       b.style.display = btn ? '' : 'none';
       b.textContent = btn;
       overlayAction = action;
+
+      bAlt.style.display = btnAlt ? '' : 'none';
+      bAlt.textContent = btnAlt;
+      overlayActionAlt = actionAlt;
+
+      actions.style.display = (btn || btnAlt) ? 'flex' : 'none';
       $('overlay').className = theme;
     }
-    function hideOverlay() {$('overlay').className = 'hidden'; overlayAction = null;}
+
+    function hideOverlay() {
+      $('overlay').className = 'hidden';
+      overlayAction = null;
+      overlayActionAlt = null;
+      $('ovModes').style.display = 'none';
+      $('ovActions').style.display = 'none';
+    }
     $('ovBtn').onclick = () => overlayAction && overlayAction();
+    $('ovBtnAlt').onclick = () => overlayActionAlt && overlayActionAlt();
+
+    function updateModeButtons() {
+      const is3 = state.mode === 3;
+      $('btnMode3').classList.toggle('active', is3);
+      $('btnMode7').classList.toggle('active', !is3);
+      $('ovMode3').classList.toggle('active', is3);
+      $('ovMode7').classList.toggle('active', !is3);
+    }
+
+    function setIntensity(mode) {
+      state.mode = Number(mode) === 3 ? 3 : 7;
+      updateModeButtons();
+      send({ type: 'setMode', mode: state.mode });
+      toast(`Intensity set to ${state.mode} stages (${state.mode === 3 ? 'Quick' : 'Original'})`);
+    }
+
+    $('btnMode3').onclick = () => setIntensity(3);
+    $('btnMode7').onclick = () => setIntensity(7);
+    $('ovMode3').onclick = () => setIntensity(3);
+    $('ovMode7').onclick = () => setIntensity(7);
 
     function toast(msg) {
       const t = $('toast');
@@ -716,8 +888,12 @@
       resetArena();
     }
 
-    function onWaiting() {
+    function onWaiting(m) {
       resetLocal();
+      if (m && m.prefMode) {
+        state.mode = Number(m.prefMode) === 3 ? 3 : 7;
+      }
+      updateModeButtons();
       Object.assign(state, {phase: 'waiting', role: null, texts: [], names: [], totalChars: 0, wins: {you: 0, opp: 0}});
       $('text').innerHTML = ''; $('stageTitle').textContent = ''; $('stageProg').firstElementChild.style.width = '0';
       $('resetBtn').disabled = true;
@@ -725,11 +901,22 @@
       showOverlay({
         big: '⏳ Waiting for an opponent...',
         sub: 'Open this page in a second tab, or send the link to a friend on your network.',
+        showModes: true,
       });
+    }
+
+    function onPrefMode(m) {
+      if (m && m.mode) {
+        state.mode = Number(m.mode) === 3 ? 3 : 7;
+        updateModeButtons();
+      }
     }
 
     function onMatched(m) {
       resetLocal();
+      const mode = m.mode ? (Number(m.mode) === 3 ? 3 : 7) : state.mode;
+      state.mode = mode;
+      updateModeButtons();
       Object.assign(state, {
         phase: 'countdown', role: m.role, texts: m.texts, names: m.names, wins: m.wins, round: m.round,
         totalChars: m.texts.reduce((a, t) => a + t.length, 0),
@@ -741,6 +928,7 @@
       let sub = wolf
         ? `Finish all ${n} levels before the sheep gets away - then eat it!`
         : `Finish all ${n} levels first and run to safety before the wolf catches you!`;
+      sub += ` (${mode === 3 ? '3 Stages Quick' : '7 Stages Original'})`;
       if (m.round > 1) sub += ' (Roles swapped!)';
       showOverlay({big: wolf ? '🐺 You are the WOLF' : '🐑 You are the SHEEP', sub, count: '3', theme: m.role});
       let c = 3;
@@ -783,7 +971,17 @@
       else if (m.won) {big = '🎉 You escaped!'; sub = 'The wolf goes hungry tonight. Baaa!';}
       else {big = '🦴 You got eaten...'; sub = 'The wolf was faster this time.';}
       sub += `  -  ${wpm} WPM, ${acc}% accuracy, ${fmt(secs)}`;
-      showOverlay({big, sub, btn: '↻ Play again (swap roles)', action: () => send({type: 'reset'}), theme: m.won ? 'sheep' : 'wolf'});
+
+      const is3 = state.mode === 3;
+      showOverlay({
+        big,
+        sub,
+        btn: `↻ Play again (${state.mode} Stages)`,
+        action: () => send({type: 'reset', mode: state.mode}),
+        btnAlt: `↻ Switch to ${is3 ? 7 : 3} Stages`,
+        actionAlt: () => setIntensity(is3 ? 7 : 3),
+        theme: m.won ? 'sheep' : 'wolf',
+      });
     }
 
     /* ================= typing ================= */
@@ -895,7 +1093,7 @@
       if (e.key === 'Enter' && state.phase === 'over' && overlayAction) return overlayAction();
       if (state.phase === 'playing' && document.activeElement !== input && !e.ctrlKey && !e.metaKey && !e.altKey) input.focus();
     });
-    $('resetBtn').onclick = () => send({type: 'reset'});
+    $('resetBtn').onclick = () => send({type: 'reset', mode: state.mode});
 
     /* ================= stats ================= */
     const fmt = (s) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
@@ -1004,6 +1202,7 @@
     }
 
     /* initial UI */
+    updateModeButtons();
     buildLevels(); refreshTags(); refreshStats();
     showOverlay({big: 'Connecting...', sub: ''});
   </script>
