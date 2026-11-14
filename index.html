@@ -4,21 +4,26 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Wolf &amp; Sheep - Typing Duel</title>
+  <title>CIC in Wonderland — The Mad Typing Duel</title>
+  <link rel="icon" type="image/png" href="/assets/logo.png">
   <style>
     :root {
-      --bg: #11111b;
-      --panel: #181825;
-      --line: #313244;
-      --text: #cdd6f4;
-      --dim: #6c7086;
-      --dim2: #585b70;
-      --ok: #a6e3a1;
-      --bad: #f38ba8;
-      --accent: #89b4fa;
-      --gold: #f9e2af;
-      --wolf: #f38ba8;
-      --sheep: #a6e3a1;
+      --bg: #0d0818;
+      --panel: #160f26;
+      --panel-alt: #1f1535;
+      --line: #352554;
+      --line-glow: rgba(191, 224, 98, 0.25);
+      --text: #ece5f8;
+      --dim: #9484b3;
+      --dim2: #6d5b8c;
+      --ok: #bfe062;        /* Wonderland Keyhole Lime */
+      --bad: #f36b8e;       /* Queen of Hearts Rose Red */
+      --accent: #bfe062;    /* Primary Lime Accent */
+      --lavender: #caa9e8;  /* Cheshire Lavender */
+      --gold: #f6e27f;      /* Golden Keyhole */
+      --alice: #7ec8e3;     /* Alice Apron Blue */
+      --rabbit: #f6e27f;    /* White Rabbit Fur/Gold */
+      --cheshire: #e06bb5;  /* Cheshire Pink */
     }
 
     * {
@@ -32,13 +37,48 @@
     }
 
     body {
-      background: radial-gradient(1200px 600px at 20% -10%, #1e1e2e, transparent), var(--bg);
+      background:
+        radial-gradient(1200px 700px at 15% -10%, #2a1548, transparent 65%),
+        radial-gradient(900px 600px at 85% 110%, #15293d, transparent 60%),
+        var(--bg);
       color: var(--text);
-      font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Cinzel", Georgia, serif;
       overflow: hidden;
+      overscroll-behavior: none;
+      -webkit-text-size-adjust: 100%;
+      text-size-adjust: 100%;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      opacity: .5;
+      background-image: radial-gradient(rgba(202, 169, 232, .14) 1px, transparent 1px);
+      background-size: 26px 26px;
+      mask-image: radial-gradient(ellipse at 50% 30%, #000 0%, transparent 75%);
+      -webkit-mask-image: radial-gradient(ellipse at 50% 30%, #000 0%, transparent 75%);
+    }
+
+    button,
+    .mode-btn,
+    .mode-pill,
+    .pill,
+    .btn {
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+    }
+
+    button:focus-visible,
+    .name-input:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
     }
 
     #app {
+      height: 100vh;
       height: 100dvh;
       max-width: 1600px;
       margin: 0 auto;
@@ -46,6 +86,8 @@
       display: grid;
       grid-template-rows: auto auto auto minmax(0, 1fr) auto;
       gap: 12px;
+      position: relative;
+      z-index: 1;
     }
 
     /* ---------- header ---------- */
@@ -60,45 +102,70 @@
     .brand {
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 14px;
+      min-width: 0;
     }
 
-    .logo {
-      font-size: 2rem;
+    .brand-logo {
+      height: 48px;
+      width: auto;
+      object-fit: contain;
+      filter: drop-shadow(0 2px 8px rgba(191, 224, 98, .35));
+      transition: transform .2s ease;
     }
 
-    h1 {
+    .brand-logo:hover {
+      transform: scale(1.05) rotate(-2deg);
+    }
+
+    .brand-text {
+      min-width: 0;
+    }
+
+    .brand-text h1 {
       margin: 0;
       font-size: 1.35rem;
-      line-height: 1;
+      line-height: 1.1;
+      letter-spacing: .02em;
+      color: #fff;
+      background: linear-gradient(120deg, #ffffff 30%, var(--lavender) 65%, var(--accent));
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
     }
 
-    .brand small {
-      color: var(--dim);
-      letter-spacing: .14em;
+    .brand-text small {
+      color: var(--accent);
+      letter-spacing: .15em;
       text-transform: uppercase;
       font-size: .7rem;
+      font-weight: 700;
     }
 
     .stats {
       display: flex;
       gap: 10px;
       flex-wrap: wrap;
+      order: 3;
+      width: 100%;
     }
 
     .stat {
-      background: var(--panel);
+      flex: 1 1 96px;
+      background: linear-gradient(180deg, var(--panel-alt), var(--panel));
       border: 1px solid var(--line);
       border-radius: 12px;
       padding: 6px 16px;
       min-width: 96px;
       text-align: center;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, .2);
     }
 
     .stat b {
       display: block;
       font-size: 1.35rem;
       font-variant-numeric: tabular-nums;
+      color: #fff;
     }
 
     .stat span {
@@ -109,35 +176,44 @@
     }
 
     .btn {
-      background: var(--accent);
-      color: #11111b;
+      background: linear-gradient(180deg, #d0ef86, var(--accent));
+      color: #110e1b;
       border: 0;
       border-radius: 12px;
       padding: 11px 20px;
-      font-weight: 700;
+      font-weight: 800;
       font-size: .95rem;
       cursor: pointer;
-      transition: transform .1s, filter .15s;
+      transition: transform .1s, filter .15s, box-shadow .15s;
+      box-shadow: 0 2px 10px rgba(191, 224, 98, .2);
     }
 
     .btn:hover:not(:disabled) {
       filter: brightness(1.1);
       transform: translateY(-1px);
+      box-shadow: 0 4px 14px rgba(191, 224, 98, .35);
+    }
+
+    .btn:active:not(:disabled) {
+      transform: translateY(0);
     }
 
     .btn:disabled {
       opacity: .35;
       cursor: not-allowed;
+      box-shadow: none;
     }
 
     .btn.alt {
       background: var(--panel);
       color: var(--text);
       border: 1px solid var(--line);
+      box-shadow: none;
     }
 
     .btn.alt:hover:not(:disabled) {
       border-color: var(--accent);
+      color: var(--accent);
       filter: none;
     }
 
@@ -177,8 +253,8 @@
 
     .mode-btn.active {
       background: var(--accent);
-      color: #11111b;
-      box-shadow: 0 2px 8px rgba(137, 180, 250, .25);
+      color: #110e1b;
+      box-shadow: 0 2px 8px rgba(191, 224, 98, .3);
     }
 
     .ov-modes {
@@ -194,7 +270,7 @@
       font-weight: 700;
       letter-spacing: .08em;
       text-transform: uppercase;
-      color: var(--dim);
+      color: var(--lavender);
     }
 
     .ov-modes-btns {
@@ -223,9 +299,9 @@
 
     .mode-pill.active {
       background: var(--accent);
-      color: #11111b;
+      color: #110e1b;
       border-color: var(--accent);
-      box-shadow: 0 4px 12px rgba(137, 180, 250, .3);
+      box-shadow: 0 4px 12px rgba(191, 224, 98, .35);
     }
 
     #ovActions {
@@ -234,6 +310,160 @@
       flex-wrap: wrap;
       justify-content: center;
       margin-top: 6px;
+    }
+
+    .ov-form-label {
+      font-size: .8rem;
+      font-weight: 700;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: var(--lavender);
+      margin-top: 4px;
+    }
+
+    #ovForm {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      margin-top: 4px;
+    }
+
+    .name-input {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      color: var(--text);
+      font: inherit;
+      font-weight: 700;
+      font-size: 1.05rem;
+      padding: 11px 18px;
+      min-width: 260px;
+      text-align: center;
+      outline: none;
+      transition: border-color .15s, box-shadow .15s;
+    }
+
+    .name-input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(191, 224, 98, .2);
+    }
+
+    .name-input::placeholder {
+      color: var(--dim2);
+      font-weight: 500;
+    }
+
+    /* ---------- solo mode ---------- */
+    #arena.solo {
+      grid-template-rows: 1fr;
+    }
+
+    #arena.solo .lane.rabbit {
+      display: none;
+    }
+
+    #arena.solo .lane.alice {
+      border-bottom: 0;
+    }
+
+    /* ---------- dashboard ---------- */
+    #dashboardPanel {
+      position: absolute;
+      inset: 0;
+      z-index: 30;
+      display: none;
+      flex-direction: column;
+      gap: 16px;
+      padding: clamp(18px, 3vw, 44px);
+      overflow: auto;
+      background: rgba(13, 8, 24, .96);
+      backdrop-filter: blur(10px);
+      border-radius: 18px;
+    }
+
+    #dashboardPanel.open {
+      display: flex;
+    }
+
+    .dash-head {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+
+    .dash-head h2 {
+      margin: 0;
+      font-size: clamp(1.3rem, 2.4vw, 2rem);
+      color: var(--gold);
+      text-shadow: 0 0 18px rgba(246, 226, 127, .35);
+    }
+
+    .dash-sub {
+      color: var(--dim);
+      font-size: .85rem;
+    }
+
+    .dash-head .btn {
+      margin-left: auto;
+    }
+
+    .dash-table-wrap {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 8px;
+      overflow-x: auto;
+      overscroll-behavior-x: contain;
+    }
+
+    .dash-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: .9rem;
+    }
+
+    .dash-table th,
+    .dash-table td {
+      padding: 10px 14px;
+      text-align: left;
+      border-bottom: 1px solid rgba(53, 37, 84, .7);
+      white-space: nowrap;
+    }
+
+    .dash-table th {
+      color: var(--dim);
+      font-size: .7rem;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+    }
+
+    .dash-table tbody tr:last-child td {
+      border-bottom: 0;
+    }
+
+    .dash-table tbody tr.me {
+      background: rgba(191, 224, 98, .12);
+      box-shadow: inset 3px 0 0 var(--accent);
+    }
+
+    .dash-table tbody tr.me td {
+      color: var(--accent);
+      font-weight: 700;
+    }
+
+    .dash-table tbody th {
+      color: var(--dim);
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .dash-empty {
+      color: var(--dim);
+      text-align: center;
+      padding: 34px 16px;
+      font-size: .95rem;
     }
 
     /* ---------- arena ---------- */
@@ -245,19 +475,20 @@
       border: 1px solid var(--line);
       display: grid;
       grid-template-rows: 1fr 1fr;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, .3);
     }
 
     .lane {
       position: relative;
     }
 
-    .lane.wolf {
-      background: linear-gradient(180deg, #1f2a33, #1b252c);
-      border-bottom: 2px dashed rgba(255, 255, 255, .07);
+    .lane.alice {
+      background: linear-gradient(180deg, #24173d, #1a102e);
+      border-bottom: 2px dashed rgba(202, 169, 232, .18);
     }
 
-    .lane.sheep {
-      background: linear-gradient(180deg, #27402b, #20361f);
+    .lane.rabbit {
+      background: linear-gradient(180deg, #1b2f25, #13241d);
     }
 
     .lane::after {
@@ -268,7 +499,7 @@
       bottom: 10px;
       height: 3px;
       opacity: .8;
-      background: repeating-linear-gradient(90deg, rgba(255, 255, 255, .08) 0 26px, transparent 26px 52px);
+      background: repeating-linear-gradient(90deg, rgba(191, 224, 98, .18) 0 26px, transparent 26px 52px);
     }
 
     .tag {
@@ -281,12 +512,15 @@
       letter-spacing: .07em;
       padding: 4px 12px;
       border-radius: 999px;
-      background: rgba(0, 0, 0, .4);
+      background: rgba(13, 8, 24, .7);
+      backdrop-filter: blur(4px);
       color: #fff;
+      border: 1px solid rgba(255, 255, 255, .1);
     }
 
     .tag.me {
       outline: 2px solid var(--accent);
+      border-color: var(--accent);
     }
 
     .run {
@@ -304,6 +538,8 @@
       font-size: clamp(34px, 5.4vh, 58px);
       line-height: 1;
       z-index: 1;
+      filter: drop-shadow(0 2px 6px rgba(0, 0, 0, .4));
+      transition: transform .2s ease;
     }
 
     .goal.party {
@@ -324,8 +560,11 @@
       display: inline-block;
       font-size: clamp(36px, 5.6vh, 60px);
       line-height: 1;
+      filter: drop-shadow(0 4px 6px rgba(0, 0, 0, .45));
+    }
+
+    .lane.rabbit .emoji {
       transform: scaleX(-1);
-      filter: drop-shadow(0 4px 4px rgba(0, 0, 0, .35));
     }
 
     .animal.hop {
@@ -341,19 +580,13 @@
       transition: left 1.8s ease-in;
     }
 
-    .animal.eaten {
-      transform: scale(0) rotate(240deg);
-      opacity: 0;
-      transition: transform .5s ease-in, opacity .5s;
-    }
-
     .animal.sad {
       transform: translateY(5px) rotate(-8deg);
       transition: transform .5s;
     }
 
     .animal.sad .emoji {
-      filter: grayscale(.7) drop-shadow(0 4px 4px rgba(0, 0, 0, .35));
+      filter: grayscale(.6) drop-shadow(0 4px 4px rgba(0, 0, 0, .35));
     }
 
     .bubble {
@@ -361,17 +594,18 @@
       bottom: 100%;
       left: 50%;
       transform: translateX(-50%);
-      margin-bottom: 2px;
+      margin-bottom: 4px;
       background: #fff;
-      color: #11111b;
+      color: #11081f;
       font-weight: 800;
       font-size: .8rem;
-      padding: 3px 10px;
+      padding: 4px 12px;
       border-radius: 12px;
       white-space: nowrap;
       opacity: 0;
       transition: opacity .2s;
       pointer-events: none;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, .3);
     }
 
     .bubble.show {
@@ -442,7 +676,7 @@
       border-radius: 999px;
       font-size: .78rem;
       font-weight: 600;
-      background: var(--panel);
+      background: linear-gradient(180deg, var(--panel-alt), var(--panel));
       border: 1px solid var(--line);
       color: var(--dim);
       transition: all .2s;
@@ -463,22 +697,24 @@
     .pill.current {
       color: var(--text);
       border-color: var(--accent);
-      box-shadow: 0 0 0 3px rgba(137, 180, 250, .15);
+      box-shadow: 0 0 0 3px rgba(191, 224, 98, .2);
     }
 
     .pill.current i {
       background: var(--accent);
-      color: #11111b;
+      color: #110e1b;
+      font-weight: 800;
     }
 
     .pill.done {
       color: var(--ok);
-      border-color: rgba(166, 227, 161, .35);
+      border-color: rgba(191, 224, 98, .35);
     }
 
     .pill.done i {
       background: var(--ok);
-      color: #11111b;
+      color: #110e1b;
+      font-weight: 800;
     }
 
     /* ---------- typing area ---------- */
@@ -488,11 +724,48 @@
       cursor: text;
       border-radius: 18px;
       border: 1px solid var(--line);
-      background: linear-gradient(180deg, rgba(30, 30, 46, .75), rgba(24, 24, 37, .9));
+      background:
+        radial-gradient(120% 90% at 50% 0%, rgba(202, 169, 232, .06), transparent 60%),
+        linear-gradient(180deg, rgba(22, 15, 38, .85), rgba(15, 10, 27, .95));
       padding: clamp(20px, 3.2vw, 48px);
       display: flex;
       flex-direction: column;
       justify-content: center;
+      box-shadow: inset 0 2px 10px rgba(0, 0, 0, .3);
+      scrollbar-width: thin;
+      scrollbar-color: rgba(202, 169, 232, .35) transparent;
+      overscroll-behavior: contain;
+    }
+
+    #typing::-webkit-scrollbar {
+      width: 10px;
+      height: 10px;
+    }
+
+    #typing::-webkit-scrollbar-thumb {
+      background: rgba(202, 169, 232, .3);
+      border-radius: 999px;
+      border: 2px solid transparent;
+      background-clip: padding-box;
+    }
+
+    #typing::-webkit-scrollbar-thumb:hover {
+      background: rgba(202, 169, 232, .5);
+      background-clip: padding-box;
+    }
+
+    #typing::-webkit-scrollbar-track,
+    #typing::-webkit-scrollbar-corner {
+      background: transparent;
+    }
+
+    #text {
+      flex: 0 1 auto;
+      min-height: 0;
+      font-family: "JetBrains Mono", "Fira Code", ui-monospace, Menlo, Consolas, monospace;
+      font-size: clamp(1.3rem, 2.55vw, 2.5rem);
+      line-height: 1.85;
+      user-select: none;
     }
 
     #stageProg {
@@ -508,8 +781,9 @@
       display: block;
       height: 100%;
       width: 0;
-      background: linear-gradient(90deg, var(--accent), var(--ok));
+      background: linear-gradient(90deg, var(--alice), var(--lavender), var(--ok));
       transition: width .12s;
+      box-shadow: 0 0 8px rgba(191, 224, 98, .5);
     }
 
     #stageTitle {
@@ -520,13 +794,6 @@
       font-size: .8rem;
       margin-bottom: 18px;
       min-height: 1em;
-    }
-
-    #text {
-      font-family: "JetBrains Mono", "Fira Code", ui-monospace, Menlo, Consolas, monospace;
-      font-size: clamp(1.3rem, 2.55vw, 2.5rem);
-      line-height: 1.85;
-      user-select: none;
     }
 
     .w {
@@ -542,16 +809,18 @@
 
     .c.ok {
       color: var(--ok);
+      text-shadow: 0 0 6px rgba(191, 224, 98, .4);
     }
 
     .c.bad {
       color: #fff;
-      background: rgba(243, 139, 168, .6);
+      background: rgba(243, 107, 142, .65);
+      border-radius: 4px;
     }
 
     .c.cur {
       color: var(--text);
-      background: rgba(137, 180, 250, .2);
+      background: rgba(191, 224, 98, .2);
       box-shadow: inset 0 -3px 0 var(--accent);
       animation: blink 1s steps(2) infinite;
     }
@@ -578,15 +847,17 @@
       bottom: 14px;
       left: 50%;
       transform: translateX(-50%);
-      background: rgba(249, 226, 175, .12);
-      color: var(--gold);
-      border: 1px solid rgba(249, 226, 175, .3);
+      background: rgba(202, 169, 232, .12);
+      color: var(--lavender);
+      border: 1px solid rgba(202, 169, 232, .3);
       border-radius: 999px;
-      padding: 6px 16px;
+      padding: 6px 18px;
       font-size: .8rem;
       opacity: 0;
       transition: opacity .2s;
       pointer-events: none;
+      max-width: calc(100% - 32px);
+      text-align: center;
     }
 
     #typing.unfocused #focusHint {
@@ -599,14 +870,15 @@
       left: 50%;
       transform: translate(-50%, -10px);
       background: var(--accent);
-      color: #11111b;
+      color: #110e1b;
       font-weight: 800;
-      padding: 8px 20px;
+      padding: 8px 22px;
       border-radius: 999px;
       opacity: 0;
       transition: all .25s;
       pointer-events: none;
       z-index: 20;
+      box-shadow: 0 4px 16px rgba(191, 224, 98, .35);
     }
 
     #toast.show {
@@ -622,13 +894,23 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: center;
+      justify-content: flex-start;
       text-align: center;
       gap: 14px;
       padding: 24px;
-      background: rgba(17, 17, 27, .84);
-      backdrop-filter: blur(6px);
+      background: rgba(13, 8, 24, .88);
+      backdrop-filter: blur(8px);
       transition: opacity .25s;
+      overflow: auto;
+      overscroll-behavior: contain;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(202, 169, 232, .35) transparent;
+    }
+
+    #overlay::before,
+    #overlay::after {
+      content: "";
+      margin: auto;
     }
 
     #overlay.hidden {
@@ -639,18 +921,21 @@
     #ovBig {
       font-size: clamp(2rem, 5.5vw, 4.6rem);
       font-weight: 900;
+      letter-spacing: .02em;
     }
 
-    #overlay.wolf #ovBig {
-      color: var(--wolf);
+    #overlay.alice #ovBig {
+      color: var(--alice);
+      text-shadow: 0 0 20px rgba(126, 200, 227, .4);
     }
 
-    #overlay.sheep #ovBig {
-      color: var(--sheep);
+    #overlay.rabbit #ovBig {
+      color: var(--rabbit);
+      text-shadow: 0 0 20px rgba(246, 226, 127, .4);
     }
 
     #ovSub {
-      color: #a6adc8;
+      color: #c7badf;
       font-size: clamp(1rem, 1.7vw, 1.4rem);
       max-width: 760px;
       line-height: 1.5;
@@ -659,8 +944,9 @@
     #ovCount {
       font-size: clamp(3rem, 10vw, 7rem);
       font-weight: 900;
-      color: var(--gold);
+      color: var(--accent);
       line-height: 1;
+      text-shadow: 0 0 24px rgba(191, 224, 98, .5);
     }
 
     footer {
@@ -679,6 +965,218 @@
       padding: 1px 6px;
       font-size: .75rem;
     }
+
+    /* ---------- phones ---------- */
+    @media (max-width: 720px) {
+      #app {
+        padding: 10px 12px;
+        gap: 10px;
+      }
+
+      header {
+        gap: 10px;
+      }
+
+      .brand-logo {
+        height: 40px;
+      }
+
+      .brand-text h1 {
+        font-size: 1.15rem;
+      }
+
+      .header-actions {
+        gap: 8px;
+      }
+
+      .mode-btn {
+        padding: 7px 12px;
+      }
+
+      .btn {
+        padding: 10px 16px;
+        font-size: .9rem;
+      }
+
+      .stats {
+        gap: 6px;
+      }
+
+      .stat {
+        flex: 1 1 0;
+        min-width: 0;
+        padding: 6px 8px;
+      }
+
+      .stat b {
+        font-size: 1.1rem;
+      }
+
+      .stat span {
+        font-size: .58rem;
+        letter-spacing: .04em;
+      }
+
+      #arena {
+        height: clamp(140px, 23vh, 240px);
+        border-radius: 14px;
+      }
+
+      .run {
+        right: 64px;
+        left: 10px;
+      }
+
+      .animal {
+        width: 44px;
+        left: calc(var(--p, 0) * (100% - 44px));
+      }
+
+      .emoji {
+        font-size: clamp(30px, 6vh, 46px);
+      }
+
+      .goal {
+        right: 12px;
+        font-size: clamp(26px, 4.4vh, 40px);
+      }
+
+      .tag {
+        font-size: .62rem;
+        padding: 3px 10px;
+        max-width: calc(100% - 24px);
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .bubble {
+        font-size: .72rem;
+      }
+
+      #typing {
+        padding: 20px 16px 30px;
+        border-radius: 14px;
+      }
+
+      #text {
+        font-size: clamp(1.1rem, 5.4vw, 1.6rem);
+        line-height: 1.75;
+        padding-right: 2px;
+      }
+
+      #stageTitle {
+        margin-bottom: 12px;
+      }
+
+      #levels {
+        gap: 6px;
+      }
+
+      .pill {
+        padding: 5px 11px;
+        font-size: .72rem;
+      }
+
+      #dashboardPanel {
+        padding: 18px 14px;
+        border-radius: 14px;
+      }
+
+      .dash-table th,
+      .dash-table td {
+        padding: 8px 10px;
+        font-size: .82rem;
+      }
+
+      .dash-head .btn {
+        margin-left: 0;
+      }
+
+      .name-input {
+        min-width: 0;
+        width: min(320px, 100%);
+      }
+
+      footer {
+        font-size: .72rem;
+      }
+    }
+
+    @media (max-width: 420px) {
+      .brand-text small {
+        display: none;
+      }
+
+      .mode-switch {
+        order: 2;
+      }
+
+      .header-actions {
+        width: 100%;
+      }
+    }
+
+    @media (max-height: 520px) {
+      #app {
+        grid-template-rows: auto auto auto minmax(0, 1fr);
+      }
+
+      footer {
+        display: none;
+      }
+
+      #arena {
+        height: 132px;
+      }
+    }
+
+    @media (max-width: 560px), (max-height: 600px) {
+      #app {
+        grid-template-rows: auto auto auto auto auto;
+        overflow-y: auto;
+        scrollbar-width: thin;
+        scrollbar-color: rgba(202, 169, 232, .35) transparent;
+      }
+
+      #app::-webkit-scrollbar {
+        width: 10px;
+      }
+
+      #app::-webkit-scrollbar-thumb {
+        background: rgba(202, 169, 232, .3);
+        border-radius: 999px;
+        border: 2px solid transparent;
+        background-clip: padding-box;
+      }
+
+      #app::-webkit-scrollbar-track {
+        background: transparent;
+      }
+
+      #typing {
+        flex: none;
+        min-height: 220px;
+      }
+
+      footer {
+        display: none;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .animal.hop,
+      .animal.cheer,
+      .goal.party,
+      .c.cur,
+      #arena.shake {
+        animation: none !important;
+      }
+
+      * {
+        scroll-behavior: auto !important;
+      }
+    }
   </style>
 </head>
 
@@ -687,46 +1185,49 @@
 
     <header>
       <div class="brand">
-        <span class="logo">🐺🐑</span>
-        <div>
-          <h1>Wolf &amp; Sheep</h1><small>Typing Duel</small>
+        <img src="/assets/logo.png" alt="CIC in Wonderland" class="brand-logo" onerror="this.src='/assets/logo-green.png'">
+        <div class="brand-text">
+          <h1>CIC in Wonderland</h1>
+          <small>The Mad Typing Duel</small>
         </div>
       </div>
       <div class="stats">
-        <div class="stat"><b id="wpm">0</b><span>WPM</span></div>
+        <div class="stat"><b id="wpm">0</b><span>WPM · net</span></div>
+        <div class="stat"><b id="grossWpm">0</b><span>WPM · gross</span></div>
         <div class="stat"><b id="acc">100%</b><span>Accuracy</span></div>
         <div class="stat"><b id="time">0:00</b><span>Time</span></div>
-        <div class="stat"><b id="score">0 – 0</b><span>You – Opponent</span></div>
+        <div class="stat" id="statScore"><b id="score">0 – 0</b><span>You – Opponent</span></div>
       </div>
       <div class="header-actions">
         <div class="mode-switch" id="modeSwitch" role="group" aria-label="Challenge intensity">
-          <button id="btnMode3" class="mode-btn" type="button" title="Quick Duel (3 Stages)">3 Stages</button>
-          <button id="btnMode7" class="mode-btn active" type="button" title="Original Duel (7 Stages)">7 Stages</button>
+          <button id="btnMode3" class="mode-btn" type="button" title="Tea Party Sprint (3 Stages)">3 Stages</button>
+          <button id="btnMode7" class="mode-btn active" type="button" title="Full Wonderland (7 Stages)">7 Stages</button>
         </div>
-        <button id="resetBtn" class="btn" disabled title="Restarts the round for both players (roles swap)">↻ Reset round</button>
+        <button id="dashBtn" class="btn alt" type="button" title="Show the Wonderland leaderboard">📊 Dashboard</button>
+        <button id="resetBtn" class="btn" disabled title="Restarts the round for both adventurers (roles swap)">↻ Reset round</button>
       </div>
     </header>
 
     <section id="arena">
-      <div class="lane wolf">
-        <span class="tag" id="tagWolf"></span>
+      <div class="lane alice">
+        <span class="tag" id="tagAlice"></span>
         <div class="run">
-          <div class="animal" id="wolf">
+          <div class="animal" id="alice">
             <div class="bubble"></div>
-            <div class="emoji">🐺</div>
+            <div class="emoji">👱‍♀️</div>
           </div>
         </div>
-        <div class="goal">🌲</div>
+        <div class="goal" id="goalAlice" title="The Golden Keyhole">🗝️</div>
       </div>
-      <div class="lane sheep">
-        <span class="tag" id="tagSheep"></span>
+      <div class="lane rabbit">
+        <span class="tag" id="tagRabbit"></span>
         <div class="run">
-          <div class="animal" id="sheep">
+          <div class="animal" id="rabbit">
             <div class="bubble"></div>
-            <div class="emoji">🐑</div>
+            <div class="emoji">🐇</div>
           </div>
         </div>
-        <div class="goal" id="goalSheep">🏡</div>
+        <div class="goal" id="goalRabbit" title="The Rabbit Hole">🕳️</div>
       </div>
     </section>
 
@@ -738,17 +1239,28 @@
       <div id="text"></div>
       <input id="input" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
         aria-label="typing input" readonly>
-      <div id="focusHint">Click here or press any key to keep typing</div>
+      <div id="focusHint">Drink me 🧪 · Click here or press any key to type down the rabbit hole</div>
       <div id="toast"></div>
       <div id="overlay" class="hidden">
         <div id="ovBig"></div>
         <div id="ovSub"></div>
         <div id="ovCount"></div>
+        <div id="ovForm">
+          <div class="ov-form-label">Your name</div>
+          <input id="nameInput" class="name-input" maxlength="24" placeholder="Alice" autocomplete="off"
+            autocorrect="off" autocapitalize="off" spellcheck="false" aria-label="Your player name">
+          <div class="ov-form-label">Play mode</div>
+          <div class="ov-modes-btns">
+            <button id="ovGameSolo" class="mode-pill" type="button">🧍 Solo</button>
+            <button id="ovGameDuo" class="mode-pill active" type="button">👥 Duo</button>
+          </div>
+          <button id="ovJoin" class="btn" type="button" style="margin-top:6px">Enter the Duel →</button>
+        </div>
         <div id="ovModes" class="ov-modes" style="display:none">
           <div class="ov-modes-label">Challenge Intensity</div>
           <div class="ov-modes-btns">
-            <button id="ovMode3" class="mode-pill" type="button">3 Stages (Quick)</button>
-            <button id="ovMode7" class="mode-pill active" type="button">7 Stages (Original)</button>
+            <button id="ovMode3" class="mode-pill" type="button">⚡ 3 Stages (Tea Party Sprint)</button>
+            <button id="ovMode7" class="mode-pill active" type="button">🏆 7 Stages (Full Wonderland)</button>
           </div>
         </div>
         <div id="ovActions" style="display:none">
@@ -759,10 +1271,34 @@
     </main>
 
     <footer>
-      <span>Type the text exactly. Wrong letters turn red - fix them with <kbd>Backspace</kbd> to move on. Pasting is
-        disabled.</span>
-      <span>Either player can reset the round - it restarts for both.</span>
+      <span>Type the text exactly. Mistakes turn rose red — fix them with <kbd>Backspace</kbd> to proceed. The Queen of Hearts forbids pasting!</span>
+      <span>Either adventurer can reset the round — roles swap each duel.</span>
     </footer>
+
+    <section id="dashboardPanel" aria-label="Wonderland dashboard">
+      <div class="dash-head">
+        <h2>🏆 Wonderland Dashboard</h2>
+        <span class="dash-sub">Best run per adventurer · ranked by WPM</span>
+        <button id="dashClose" class="btn alt" type="button">✕ Close</button>
+      </div>
+      <div class="dash-table-wrap">
+        <table class="dash-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Name</th>
+              <th>WPM</th>
+              <th>Accuracy</th>
+              <th>Mode</th>
+              <th>Intensity</th>
+              <th>Date</th>
+            </tr>
+          </thead>
+          <tbody id="dashBody"></tbody>
+        </table>
+        <div id="dashEmpty" class="dash-empty">No runs yet — be the first to conquer Wonderland!</div>
+      </div>
+    </section>
   </div>
 
   <script>
@@ -770,9 +1306,12 @@
     const $ = (id) => document.getElementById(id);
     const input = $('input');
     const typingEl = $('typing');
-    const ICON = {wolf: '🐺', sheep: '🐑'};
-    const A = {wolf: $('wolf'), sheep: $('sheep')};
-    const TAG = {wolf: $('tagWolf'), sheep: $('tagSheep')};
+
+    // Role mapping: supports Alice vs White Rabbit (and backwards-compatible with wolf/sheep)
+    const normalizeRole = (r) => (r === 'wolf' ? 'alice' : (r === 'sheep' ? 'rabbit' : r));
+    const ICON = {alice: '👱‍♀️', rabbit: '🐇'};
+    const A = {alice: $('alice'), rabbit: $('rabbit')};
+    const TAG = {alice: $('tagAlice'), rabbit: $('tagRabbit')};
 
     function getUrlMode() {
       const p = new URLSearchParams(window.location.search);
@@ -787,10 +1326,12 @@
       role: null, mode: getUrlMode(), texts: [], names: [], stage: 0, oppStage: 0, typed: '', chars: [],
       totalChars: 0, doneChars: 0, keys: 0, errors: 0, startTime: 0, endTime: 0,
       wins: {you: 0, opp: 0}, round: 0,
+      gameMode: null, myName: '', playerNames: [], youIndex: 0, dashboardRuns: [],
     };
 
     let timers = [], cdTimer = null, overlayAction = null, overlayActionAlt = null, toastTimer = null;
-    const lastHop = {wolf: 0, sheep: 0};
+    let pendingJoin = null, selectedGameMode = 'duo';
+    const lastHop = {alice: 0, rabbit: 0};
     const later = (fn, ms) => {const t = setTimeout(fn, ms); timers.push(t); return t;};
     const clearTimers = () => {timers.forEach(clearTimeout); timers = []; clearInterval(cdTimer);};
 
@@ -799,11 +1340,16 @@
     const send = (m) => {if (ws.readyState === 1) ws.send(JSON.stringify(m));};
     ws.onopen = () => {
       if (state.mode) send({ type: 'setMode', mode: state.mode });
+      if (pendingJoin) {
+        send(pendingJoin);
+        pendingJoin = null;
+        hideOverlay();
+      }
     };
     ws.onmessage = (e) => handle(JSON.parse(e.data));
     ws.onclose = () => {
       state.phase = 'closed'; clearTimers(); input.readOnly = true; $('resetBtn').disabled = true;
-      showOverlay({big: '🔌 Disconnected', sub: 'The connection to the server was lost.', btn: 'Reload', action: () => location.reload()});
+      showOverlay({big: '🔌 Disconnected', sub: 'The looking glass connection was lost.', btn: 'Reload', action: () => location.reload()});
     };
 
     function handle(m) {
@@ -814,15 +1360,17 @@
         case 'opponent': return onOpponent(m);
         case 'end': return onEnd(m);
         case 'prefModeUpdated': return onPrefMode(m);
-        case 'left': return toast('Your opponent left the game');
+        case 'dashboard': return onDashboard(m);
+        case 'left': return toast('Your opponent vanished like the Cheshire Cat!');
       }
     }
 
     /* ================= overlay / toast ================= */
-    function showOverlay({big, sub = '', count = '', btn = '', action = null, btnAlt = '', actionAlt = null, showModes = false, theme = ''}) {
+    function showOverlay({big, sub = '', count = '', btn = '', action = null, btnAlt = '', actionAlt = null, showModes = false, showForm = false, theme = ''}) {
       $('ovBig').textContent = big;
       $('ovSub').textContent = sub;
       $('ovCount').textContent = count;
+      $('ovForm').style.display = showForm ? 'flex' : 'none';
       $('ovModes').style.display = showModes ? 'flex' : 'none';
 
       const actions = $('ovActions');
@@ -838,13 +1386,14 @@
       overlayActionAlt = actionAlt;
 
       actions.style.display = (btn || btnAlt) ? 'flex' : 'none';
-      $('overlay').className = theme;
+      $('overlay').className = normalizeRole(theme);
     }
 
     function hideOverlay() {
       $('overlay').className = 'hidden';
       overlayAction = null;
       overlayActionAlt = null;
+      $('ovForm').style.display = 'none';
       $('ovModes').style.display = 'none';
       $('ovActions').style.display = 'none';
     }
@@ -863,7 +1412,7 @@
       state.mode = Number(mode) === 3 ? 3 : 7;
       updateModeButtons();
       send({ type: 'setMode', mode: state.mode });
-      toast(`Intensity set to ${state.mode} stages (${state.mode === 3 ? 'Quick' : 'Original'})`);
+      toast(`Intensity set to ${state.mode} stages (${state.mode === 3 ? 'Tea Party Sprint' : 'Full Wonderland'})`);
     }
 
     $('btnMode3').onclick = () => setIntensity(3);
@@ -871,11 +1420,42 @@
     $('ovMode3').onclick = () => setIntensity(3);
     $('ovMode7').onclick = () => setIntensity(7);
 
+    function setSelectedGameMode(m) {
+      selectedGameMode = m === 'solo' ? 'solo' : 'duo';
+      $('ovGameSolo').classList.toggle('active', selectedGameMode === 'solo');
+      $('ovGameDuo').classList.toggle('active', selectedGameMode === 'duo');
+    }
+
+    function sendJoin() {
+      const name = ($('nameInput').value || '').replace(/\s+/g, ' ').trim().slice(0, 24) || 'Anonymous';
+      state.myName = name;
+      state.gameMode = selectedGameMode;
+      try { localStorage.setItem('wonderland.name', name); } catch {}
+      $('nameInput').value = name;
+      const payload = {type: 'join', gameMode: selectedGameMode, name, intensity: state.mode};
+      if (ws.readyState === 1) {
+        send(payload);
+        hideOverlay();
+      } else {
+        pendingJoin = payload;
+        showOverlay({big: 'Connecting...', sub: 'Entering Wonderland...'});
+      }
+    }
+
+    $('ovGameSolo').onclick = () => setSelectedGameMode('solo');
+    $('ovGameDuo').onclick = () => setSelectedGameMode('duo');
+    $('ovJoin').onclick = () => sendJoin();
+    $('nameInput').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') { e.preventDefault(); sendJoin(); }
+      e.stopPropagation();
+    });
+    $('nameInput').addEventListener('keyup', (e) => e.stopPropagation());
+
     function toast(msg) {
       const t = $('toast');
       t.textContent = msg; t.classList.add('show');
       clearTimeout(toastTimer);
-      toastTimer = setTimeout(() => t.classList.remove('show'), 2000);
+      toastTimer = setTimeout(() => t.classList.remove('show'), 2200);
     }
 
     /* ================= state transitions ================= */
@@ -888,19 +1468,28 @@
       resetArena();
     }
 
+    function setSoloUi(solo) {
+      $('arena').classList.toggle('solo', solo);
+      $('statScore').style.display = solo ? 'none' : '';
+    }
+
     function onWaiting(m) {
       resetLocal();
       if (m && m.prefMode) {
         state.mode = Number(m.prefMode) === 3 ? 3 : 7;
       }
       updateModeButtons();
-      Object.assign(state, {phase: 'waiting', role: null, texts: [], names: [], totalChars: 0, wins: {you: 0, opp: 0}});
+      Object.assign(state, {
+        phase: 'waiting', role: null, texts: [], names: [], totalChars: 0, wins: {you: 0, opp: 0},
+        gameMode: 'duo', playerNames: [], youIndex: 0,
+      });
+      setSoloUi(false);
       $('text').innerHTML = ''; $('stageTitle').textContent = ''; $('stageProg').firstElementChild.style.width = '0';
       $('resetBtn').disabled = true;
       buildLevels(); refreshTags(); refreshStats();
       showOverlay({
-        big: '⏳ Waiting for an opponent...',
-        sub: 'Open this page in a second tab, or send the link to a friend on your network.',
+        big: '⏳ Down the Rabbit Hole...',
+        sub: 'Waiting for an opponent. Open this page in a second tab or share with another adventurer!',
         showModes: true,
       });
     }
@@ -914,23 +1503,40 @@
 
     function onMatched(m) {
       resetLocal();
+      const role = normalizeRole(m.role);
       const mode = m.mode ? (Number(m.mode) === 3 ? 3 : 7) : state.mode;
+      const gameMode = m.gameMode === 'solo' ? 'solo' : 'duo';
       state.mode = mode;
+      state.gameMode = gameMode;
+      state.playerNames = Array.isArray(m.playerNames) ? m.playerNames.slice(0, 2) : [];
+      state.youIndex = Number.isInteger(m.youIndex) ? m.youIndex : 0;
+      if (m.role === 'solo') state.myName = state.playerNames[state.youIndex] || state.myName;
       updateModeButtons();
+      setSoloUi(gameMode === 'solo');
       Object.assign(state, {
-        phase: 'countdown', role: m.role, texts: m.texts, names: m.names, wins: m.wins, round: m.round,
+        phase: 'countdown', role, texts: m.texts, names: m.names, wins: m.wins, round: m.round,
         totalChars: m.texts.reduce((a, t) => a + t.length, 0),
       });
       $('resetBtn').disabled = false;
       buildLevels(); buildStage(); refreshTags(); refreshStats();
 
-      const wolf = m.role === 'wolf', n = m.texts.length;
-      let sub = wolf
-        ? `Finish all ${n} levels before the sheep gets away - then eat it!`
-        : `Finish all ${n} levels first and run to safety before the wolf catches you!`;
-      sub += ` (${mode === 3 ? '3 Stages Quick' : '7 Stages Original'})`;
-      if (m.round > 1) sub += ' (Roles swapped!)';
-      showOverlay({big: wolf ? '🐺 You are the WOLF' : '🐑 You are the SHEEP', sub, count: '3', theme: m.role});
+      const n = m.texts.length;
+      if (gameMode === 'solo') {
+        showOverlay({
+          big: '🧍 Solo Wonderland',
+          sub: `Finish all ${n} levels on your own and reach the golden keyhole! (${mode === 3 ? 'Tea Party Sprint' : 'Full Wonderland'})`,
+          count: '3',
+          theme: 'alice',
+        });
+      } else {
+        const isAlice = role === 'alice';
+        let sub = isAlice
+          ? `Finish all ${n} levels and catch the White Rabbit before he slips down the rabbit hole!`
+          : `Finish all ${n} levels first and tumble safely into the rabbit hole before Alice catches up!`;
+        sub += ` (${mode === 3 ? 'Tea Party Sprint' : 'Full Wonderland'})`;
+        if (m.round > 1) sub += ' (Roles swapped!)';
+        showOverlay({big: isAlice ? '👱‍♀️ You are ALICE' : '🐇 You are the WHITE RABBIT', sub, count: '3', theme: role});
+      }
       let c = 3;
       cdTimer = setInterval(() => {c--; if (c > 0) $('ovCount').textContent = c; else clearInterval(cdTimer);}, 1000);
       if (m.by === 'opponent') toast('Your opponent reset the round');
@@ -943,22 +1549,31 @@
       state.startTime = Date.now();
       hideOverlay();
       input.readOnly = false; input.focus();
-      toast('GO! GO! GO!');
+      toast(state.gameMode === 'solo' ? 'DON\'T BE LATE! GO! GO! GO!' : "DON'T BE LATE! GO! GO! GO!");
     }
 
     function onOpponent(m) {
+      if (state.gameMode === 'solo') return;
       state.oppStage = m.stage;
-      setProgress(state.role === 'wolf' ? 'sheep' : 'wolf', m.progress);
+      setProgress(state.role === 'alice' ? 'rabbit' : 'alice', m.progress);
       refreshTags();
     }
 
     function onEnd(m) {
       state.phase = 'over';
       state.endTime = Date.now();
-      state.wins = m.wins;
+      state.wins = m.wins || state.wins;
+      state.gameMode = m.gameMode || state.gameMode;
       input.readOnly = true; input.blur();
-      refreshStats();
-      playEnd(m.winnerRole);
+      const {wpm, acc} = refreshStats();
+      if (m.won) {
+        send({
+          type: 'submitRun', name: state.myName, wpm, acc,
+          mode: state.gameMode || 'duo', intensity: state.mode,
+        });
+      }
+      refreshTags();
+      playEnd(normalizeRole(m.winnerRole));
       later(() => showResult(m), 2700);
     }
 
@@ -966,11 +1581,23 @@
       const {wpm, acc, secs} = refreshStats();
       const role = state.role;
       let big, sub;
-      if (role === 'wolf' && m.won) {big = '😋 Nom nom nom!'; sub = 'You caught the sheep. Delicious!';}
-      else if (role === 'wolf') {big = '😤 The sheep escaped!'; sub = 'It ran home happy. Better luck next time, wolf.';}
-      else if (m.won) {big = '🎉 You escaped!'; sub = 'The wolf goes hungry tonight. Baaa!';}
-      else {big = '🦴 You got eaten...'; sub = 'The wolf was faster this time.';}
-      sub += `  -  ${wpm} WPM, ${acc}% accuracy, ${fmt(secs)}`;
+      if (state.gameMode === 'solo') {
+        big = '🏆 Wonderland Conquered!';
+        sub = `Every level complete, all by yourself! ${wpm} WPM, ${acc}% accuracy, ${fmt(secs)}`;
+      } else if (role === 'alice' && m.won) {
+        big = '🗝️ Caught Him!';
+        sub = 'Curiouser and curiouser! You caught the White Rabbit right at the golden keyhole!';
+      } else if (role === 'alice') {
+        big = '🕳️ The Rabbit Got Away!';
+        sub = 'Down the rabbit hole he vanished! "No time to say goodbye, I\'m late, I\'m late!"';
+      } else if (m.won) {
+        big = '🐇 Down the Rabbit Hole!';
+        sub = 'In the nick of time! You made your date and escaped into Wonderland!';
+      } else {
+        big = '⏰ Out of Time!';
+        sub = 'Alice caught up to you before you could reach the hole! Goodness me!';
+      }
+      if (state.gameMode !== 'solo') sub += `  -  ${wpm} WPM, ${acc}% accuracy, ${fmt(secs)}`;
 
       const is3 = state.mode === 3;
       showOverlay({
@@ -980,7 +1607,7 @@
         action: () => send({type: 'reset', mode: state.mode}),
         btnAlt: `↻ Switch to ${is3 ? 7 : 3} Stages`,
         actionAlt: () => setIntensity(is3 ? 7 : 3),
-        theme: m.won ? 'sheep' : 'wolf',
+        theme: state.gameMode === 'solo' ? 'alice' : (m.won ? state.role : (state.role === 'alice' ? 'rabbit' : 'alice')),
       });
     }
 
@@ -1022,6 +1649,19 @@
       input.maxLength = t.length;
       $('stageTitle').textContent = `Level ${state.stage + 1} of ${state.texts.length}  ·  ${state.names[state.stage]}`;
       paint();
+      typingEl.scrollTop = 0;
+    }
+
+    function followCaret() {
+      const box = typingEl;
+      const cur = state.chars[state.typed.length];
+      if (!cur || box.scrollHeight <= box.clientHeight + 1) return;
+      const curTop = cur.offsetTop;
+      const pad = 48;
+      if (curTop < box.scrollTop + pad) box.scrollTop = Math.max(0, curTop - pad);
+      else if (curTop + cur.offsetHeight > box.scrollTop + box.clientHeight - pad) {
+        box.scrollTop = curTop + cur.offsetHeight - box.clientHeight + pad;
+      }
     }
 
     function buildLevels() {
@@ -1053,7 +1693,7 @@
       const v = input.value, t = state.texts[state.stage];
       for (let i = state.typed.length; i < v.length; i++) {state.keys++; if (v[i] !== t[i]) state.errors++;}
       state.typed = v;
-      paint(); setMyProgress();
+      paint(); followCaret(); setMyProgress();
       if (v === t) completeStage();
     });
 
@@ -1067,11 +1707,11 @@
       if (state.stage >= state.texts.length) {
         state.phase = 'finishing'; input.readOnly = true;
         setMyProgress();
-        $('stageTitle').textContent = 'All levels complete!';
+        $('stageTitle').textContent = 'Through the Looking Glass! All levels complete!';
         $('stageProg').firstElementChild.style.width = '100%';
         return;
       }
-      toast(`✅ Level ${state.stage} complete - next: ${state.names[state.stage]}`);
+      toast(`✅ Level ${state.stage} complete — next: ${state.names[state.stage]}`);
       buildStage();
       setMyProgress();
     }
@@ -1085,13 +1725,15 @@
     input.addEventListener('blur', () => {if (state.phase === 'playing') typingEl.classList.add('unfocused');});
     input.addEventListener('focus', () => typingEl.classList.remove('unfocused'));
     typingEl.addEventListener('mousedown', (e) => {
-      if (e.target.closest('button')) return;
+      if (e.target.closest('button, input, textarea, select')) return;
+      if (!$('overlay').classList.contains('hidden')) return;
       e.preventDefault();
       if (!input.readOnly) input.focus();
     });
     document.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' && state.phase === 'over' && overlayAction) return overlayAction();
-      if (state.phase === 'playing' && document.activeElement !== input && !e.ctrlKey && !e.metaKey && !e.altKey) input.focus();
+      const dashOpen = $('dashboardPanel').classList.contains('open');
+      if (e.key === 'Enter' && state.phase === 'over' && overlayAction && !dashOpen) return overlayAction();
+      if (state.phase === 'playing' && !dashOpen && document.activeElement !== input && !e.ctrlKey && !e.metaKey && !e.altKey) input.focus();
     });
     $('resetBtn').onclick = () => send({type: 'reset', mode: state.mode});
 
@@ -1103,56 +1745,83 @@
       const secs = state.startTime ? Math.max(0, (end - state.startTime) / 1000) : 0;
       const good = state.doneChars + correctPrefix();
       const wpm = secs > 1 ? Math.round(good / 5 / (secs / 60)) : 0;
+      const gross = secs > 1 ? Math.round(state.keys / 5 / (secs / 60)) : 0;
       const acc = state.keys ? Math.max(0, Math.round(100 * (1 - state.errors / state.keys))) : 100;
       $('wpm').textContent = wpm;
+      $('grossWpm').textContent = gross;
       $('acc').textContent = acc + '%';
       $('time').textContent = fmt(secs);
       $('score').textContent = `${state.wins.you} – ${state.wins.opp}`;
-      return {wpm, acc, secs};
+      return {wpm, gross, acc, secs};
     }
     setInterval(refreshStats, 200);
 
     /* ================= arena ================= */
+    function nameForRole(r) {
+      if (!state.playerNames.length) return r === 'alice' ? 'ALICE' : 'WHITE RABBIT';
+      if (state.gameMode === 'solo') return state.playerNames[0] || 'YOU';
+      return state.playerNames[r === state.role ? state.youIndex : 1 - state.youIndex] || (r === 'alice' ? 'ALICE' : 'WHITE RABBIT');
+    }
+
     function refreshTags() {
       const n = state.texts.length;
-      for (const r of ['wolf', 'sheep']) {
-        const mine = r === state.role;
-        let label = `${ICON[r]} ${r.toUpperCase()}`;
-        if (state.role) {
+      const solo = state.gameMode === 'solo';
+      for (const r of ['alice', 'rabbit']) {
+        const mine = solo ? r === 'alice' : r === state.role;
+        let label = `${ICON[r]} ${r === 'alice' ? 'ALICE' : 'WHITE RABBIT'}`;
+        if (state.role && !solo) {
+          label = `${ICON[r]} ${nameForRole(r)}`;
           const lv = mine ? state.stage : state.oppStage;
           label += ` · ${mine ? 'YOU' : 'OPPONENT'} · ${lv >= n ? 'DONE' : `LV ${lv + 1}/${n}`}`;
+        } else if (state.role && solo) {
+          label = `${ICON.alice} ${nameForRole('alice')} · YOU · ${state.stage >= n ? 'DONE' : `LV ${state.stage + 1}/${n}`}`;
         }
-        TAG[r].textContent = label;
-        TAG[r].classList.toggle('me', mine);
+        if (TAG[r]) {
+          TAG[r].textContent = label;
+          TAG[r].classList.toggle('me', mine);
+        }
       }
     }
 
     function setProgress(role, p) {
-      const el = A[role];
+      const r = normalizeRole(role) === 'solo' ? 'alice' : normalizeRole(role);
+      const el = A[r];
+      if (!el) return;
       el.style.setProperty('--p', Math.min(1, Math.max(0, p)).toFixed(4));
       const now = Date.now();
-      if (now - lastHop[role] > 280) {
-        lastHop[role] = now;
+      if (now - lastHop[r] > 280) {
+        lastHop[r] = now;
         el.classList.remove('hop'); void el.offsetWidth; el.classList.add('hop');
       }
     }
 
     function resetArena() {
-      for (const r of ['wolf', 'sheep']) {
+      for (const r of ['alice', 'rabbit']) {
         const el = A[r];
+        if (!el) continue;
         el.removeAttribute('style');
         el.className = 'animal';
         el.style.setProperty('--p', 0);
-        el.querySelector('.bubble').classList.remove('show');
+        const b = el.querySelector('.bubble');
+        if (b) b.classList.remove('show');
       }
       $('arena').classList.remove('shake');
-      $('goalSheep').classList.remove('party');
+      const ga = $('goalAlice');
+      if (ga) ga.classList.remove('party');
+      const gr = $('goalRabbit');
+      if (gr) gr.classList.remove('party');
       document.querySelectorAll('.fx').forEach((e) => e.remove());
     }
 
     function bubble(role, text) {
-      const b = A[role].querySelector('.bubble');
-      b.textContent = text; b.classList.add('show');
+      const r = normalizeRole(role) === 'solo' ? 'alice' : normalizeRole(role);
+      const el = A[r];
+      if (!el) return;
+      const b = el.querySelector('.bubble');
+      if (b) {
+        b.textContent = text;
+        b.classList.add('show');
+      }
     }
 
     function fx(emoji, x, y, o = {}) {
@@ -1170,41 +1839,134 @@
     }
 
     function playEnd(winner) {
-      const wolf = A.wolf, sheep = A.sheep;
-      [wolf, sheep].forEach((el) => el.classList.remove('hop'));
+      const w = normalizeRole(winner);
+      const alice = A.alice, rabbit = A.rabbit;
+      [alice, rabbit].forEach((el) => el.classList.remove('hop'));
 
-      if (winner === 'wolf') {
-        // the wolf pounces on the sheep and eats it
-        const wr = wolf.getBoundingClientRect(), sr = sheep.getBoundingClientRect();
-        wolf.style.transition = 'transform .7s cubic-bezier(.6,0,.3,1)';
-        wolf.style.transform = `translate(${sr.left - wr.left - 18}px, ${sr.top - wr.top}px) scale(1.25)`;
-        wolf.style.zIndex = 5;
+      if (state.gameMode === 'solo') {
+        // Solo victory: Alice reaches the golden keyhole alone
+        alice.style.setProperty('--p', 1);
+        bubble('alice', 'Wonderland conquered! 🏆✨');
+        alice.classList.add('cheer');
+        $('goalAlice').classList.add('party');
+        const width = $('arena').clientWidth, height = $('arena').clientHeight;
+        const bits = ['✨', '🏆', '🗝️', '🫖', '🌹', '⭐', '🃏'];
+        for (let i = 0; i < 28; i++) fx(bits[i % bits.length], Math.random() * width, height - 40, {delay: Math.random() * .8});
+        return;
+      }
+
+      if (w === 'alice') {
+        // Alice catches up to the White Rabbit at the keyhole
+        const ar = alice.getBoundingClientRect(), rr = rabbit.getBoundingClientRect();
+        alice.style.transition = 'transform .7s cubic-bezier(.6,0,.3,1)';
+        alice.style.transform = `translate(${rr.left - ar.left - 18}px, ${rr.top - ar.top}px) scale(1.15)`;
+        alice.style.zIndex = 5;
         later(() => {
-          bubble('wolf', 'CHOMP! 😋');
-          sheep.classList.add('eaten');
-          const p = posOf(sheep);
-          fx('🦴', p.x, p.y, {dx: -40}); fx('🦴', p.x + 12, p.y, {dx: 45, delay: .1}); fx('💨', p.x, p.y, {dx: 0, delay: .05});
-          $('arena').classList.add('shake');
+          bubble('alice', 'Caught you! 🗝️✨');
+          bubble('rabbit', 'Oh dear! ⏰');
+          rabbit.classList.add('sad');
+          $('goalAlice').classList.add('party');
+          const p = posOf(rabbit);
+          fx('🗝️', p.x, p.y, {dx: -35});
+          fx('✨', p.x + 10, p.y, {dx: 40, delay: .08});
+          fx('🫖', p.x - 10, p.y, {dx: -15, delay: .15});
+          fx('🌹', p.x + 20, p.y, {dx: 25, delay: .2});
+          const width = $('arena').clientWidth, height = $('arena').clientHeight;
+          const bits = ['✨', '🗝️', '🃏', '🫖', '🧁', '🌟'];
+          for (let i = 0; i < 20; i++) fx(bits[i % bits.length], Math.random() * width, height - 40, {delay: Math.random() * .8});
         }, 720);
       } else {
-        // the sheep reaches the barn, then runs off happy
-        sheep.style.setProperty('--p', 1);
-        bubble('wolf', 'Grrr... 😤'); wolf.classList.add('sad');
+        // The White Rabbit hops into the rabbit hole with his pocket watch!
+        rabbit.style.setProperty('--p', 1);
+        bubble('rabbit', "I'm late, I'm late! 🕳️💨");
+        bubble('alice', 'Curiouser & curiouser! 💭');
+        alice.classList.add('sad');
         later(() => {
-          bubble('sheep', 'Baaa! 🎉');
-          sheep.classList.add('home', 'cheer');
-          $('goalSheep').classList.add('party');
-          const w = $('arena').clientWidth, h = $('arena').clientHeight;
-          const bits = ['🎉', '✨', '💚', '🌟', '❤️'];
-          for (let i = 0; i < 26; i++) fx(bits[i % bits.length], Math.random() * w, h - 40, {delay: Math.random() * .8});
+          rabbit.classList.add('home', 'cheer');
+          $('goalRabbit').classList.add('party');
+          const width = $('arena').clientWidth, height = $('arena').clientHeight;
+          const bits = ['⏰', '🕳️', '💨', '♠️', '♥️', '♦️', '♣️', '🎩'];
+          for (let i = 0; i < 24; i++) fx(bits[i % bits.length], Math.random() * width, height - 40, {delay: Math.random() * .8});
         }, 450);
       }
     }
 
+    /* ================= dashboard ================= */
+    function fmtDate(at) {
+      const n = Number(at);
+      if (!n) return '—';
+      try {
+        return new Date(n).toLocaleDateString(undefined, {month: 'short', day: 'numeric'});
+      } catch {
+        return '—';
+      }
+    }
+
+    function onDashboard(m) {
+      state.dashboardRuns = Array.isArray(m.runs) ? m.runs : [];
+      renderDashboard();
+    }
+
+    function renderDashboard() {
+      const runs = state.dashboardRuns;
+      const body = $('dashBody');
+      body.innerHTML = '';
+      $('dashEmpty').style.display = runs.length ? 'none' : 'block';
+      const my = (state.myName || '').trim().toLowerCase();
+      runs.forEach((r, i) => {
+        const tr = document.createElement('tr');
+        if (my && String(r.name || '').trim().toLowerCase() === my) tr.className = 'me';
+        const cells = [
+          i + 1,
+          r.name || 'Anonymous',
+          r.wpm ?? 0,
+          `${r.acc ?? 0}%`,
+          r.mode === 'solo' ? 'Solo' : 'Duo',
+          Number(r.intensity) === 3 ? '3 Stages' : '7 Stages',
+          fmtDate(r.at),
+        ];
+        cells.forEach((v, ci) => {
+          const cell = document.createElement(ci === 0 ? 'th' : 'td');
+          cell.textContent = String(v);
+          tr.appendChild(cell);
+        });
+        body.appendChild(tr);
+      });
+    }
+
+    function toggleDashboard(force) {
+      const panel = $('dashboardPanel');
+      const open = force === undefined ? !panel.classList.contains('open') : !!force;
+      panel.classList.toggle('open', open);
+      if (open) {
+        input.blur();
+        renderDashboard();
+      } else if (state.phase === 'playing') {
+        input.focus();
+      }
+    }
+
+    $('dashBtn').onclick = () => toggleDashboard();
+    $('dashClose').onclick = () => toggleDashboard(false);
+
     /* initial UI */
+    try {
+      const savedName = localStorage.getItem('wonderland.name');
+      if (savedName) {
+        $('nameInput').value = savedName;
+        state.myName = savedName;
+      }
+    } catch {}
+    setSelectedGameMode('duo');
     updateModeButtons();
     buildLevels(); refreshTags(); refreshStats();
-    showOverlay({big: 'Connecting...', sub: ''});
+    showOverlay({
+      big: '🎩 Welcome to Wonderland',
+      sub: 'Pick a name and choose how you want to play. Then type your way to the golden keyhole!',
+      showForm: true,
+      showModes: true,
+    });
+    $('nameInput').focus();
   </script>
 </body>
 

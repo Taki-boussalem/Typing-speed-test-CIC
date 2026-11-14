@@ -1,6 +1,7 @@
 {
-  "name": "wolf-sheep-duel",
+  "name": "cic-in-wonderland",
   "version": "2.0.0",
+  "description": "CIC in Wonderland - The Mad Typing Duel",
   "main": "server.js",
   "scripts": { "start": "node server.js" },
   "dependencies": { "ws": "^8.18.0" }
